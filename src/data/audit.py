@@ -8,6 +8,7 @@ from collections import Counter
 DROTAR_CSV    = "data/raw/drotar/dataSciRep_Public.csv"
 MENDELEY_PATH = "data/raw/mendeley/DATASET DYSGRAPHIA HANDWRITING"
 EMNIST_PATH   = "data/raw/emnist/gzip"
+KAGGLE_PATH   = "data/raw/kaggle/dataset"
 REPORT_DIR    = "reports"
 
 os.makedirs(REPORT_DIR, exist_ok=True)
@@ -178,7 +179,87 @@ print(f"Blank/corrupt (sampled 1000 train): {blank}")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# 4. MENDELEY LABEL CROSS-CHECK + POST-FILTER COUNT
+# 4. KAGGLE DYSGRAPHIA
+# ══════════════════════════════════════════════════════════════════════════════
+print("\n" + "=" * 60)
+print("KAGGLE DYSGRAPHIA AUDIT")
+print("=" * 60)
+
+EXPECTED_KAGGLE = {
+    "corrected":      462,
+    "high potential": 435,
+    "low potential":  417
+}
+
+kaggle_results   = []
+kaggle_counts    = Counter()
+VALID_EXTENSIONS = {".png", ".jpg", ".jpeg", ".bmp", ".tiff"}
+
+for severity in os.listdir(KAGGLE_PATH):
+    severity_dir = os.path.join(KAGGLE_PATH, severity)
+    if not os.path.isdir(severity_dir):
+        continue
+
+    for fname in os.listdir(severity_dir):
+        ext = os.path.splitext(fname)[1].lower()
+        if ext not in VALID_EXTENSIONS:
+            continue
+
+        fpath  = os.path.join(severity_dir, fname)
+        issues = []
+
+        try:
+            img  = Image.open(fpath)
+            w, h = img.size
+            arr  = np.array(img.convert("L"))
+
+            if arr.std() < 5:
+                issues.append("blank or corrupted")
+            if w < 100 or h < 100:
+                issues.append(f"too small: {w}x{h}")
+            if arr.mean() > 245:
+                issues.append("possible blank/drawing — near white")
+            elif arr.mean() < 10:
+                issues.append("possible blank/drawing — near black")
+
+        except Exception as e:
+            issues.append(f"could not open: {e}")
+
+        status = "OK" if not issues else "FLAG: " + "; ".join(issues)
+        kaggle_results.append({"file": fname, "severity": severity, "status": status})
+        kaggle_counts[severity] += 1
+
+        if status != "OK":
+            removal_log.append({
+                "filename": fname,
+                "dataset":  "Kaggle",
+                "reason":   status
+            })
+
+ok      = [r for r in kaggle_results if r["status"] == "OK"]
+flagged = [r for r in kaggle_results if r["status"] != "OK"]
+
+print(f"Total images scanned: {len(kaggle_results)}")
+print(f"✓ OK:      {len(ok)}")
+print(f"✗ Flagged: {len(flagged)}")
+
+print(f"\nSamples per severity folder:")
+for severity, count in sorted(kaggle_counts.items()):
+    expected = EXPECTED_KAGGLE.get(severity, "?")
+    match    = "✓" if count == expected else f"✗ EXPECTED {expected}"
+    print(f"  {severity}: {count} {match}")
+
+print(f"\nTotal: {sum(kaggle_counts.values())}  "
+      f"{'✓' if sum(kaggle_counts.values()) == 1314 else '✗ EXPECTED 1314'}")
+
+if flagged:
+    print(f"\n--- Flagged files ---")
+    for r in flagged:
+        print(f"  [{r['severity']}] {r['file']}: {r['status']}")
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# 5. MENDELEY LABEL CROSS-CHECK + POST-FILTER COUNT
 # ══════════════════════════════════════════════════════════════════════════════
 print("\n" + "=" * 60)
 print("MENDELEY LABEL CROSS-CHECK")
@@ -257,7 +338,7 @@ print(f"\nSummary saved → {REPORT_DIR}/mendeley_class_summary.csv")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# 5. REMOVAL LOG  ← always last
+# 6. REMOVAL LOG  ← always last
 # ══════════════════════════════════════════════════════════════════════════════
 removal_df = pd.DataFrame(removal_log, columns=["filename", "dataset", "reason"])
 removal_df.to_csv(f"{REPORT_DIR}/removal_logs.csv", index=False)
