@@ -2,6 +2,7 @@ import os
 import gzip
 import numpy as np
 import pandas as pd
+import random
 from PIL import Image
 from collections import Counter
 
@@ -177,6 +178,109 @@ print(f"Balance:        min={min(emnist_counts)}  max={max(emnist_counts)}  "
 blank = sum(1 for img in train_imgs[:1000] if img.std() < 5)
 print(f"Blank/corrupt (sampled 1000 train): {blank}")
 
+# ══════════════════════════════════════════════════════════════════════════════
+# DPI + VISUAL 10% INSPECTION (Mendeley & Kaggle)
+# ══════════════════════════════════════════════════════════════════════════════
+print("\n" + "=" * 60)
+print("DPI + VISUAL 10% INSPECTION")
+print("=" * 60)
+
+def audit_image_quality(fpath):
+    issues = []
+    try:
+        img = Image.open(fpath)
+        arr = np.array(img.convert("L"))
+
+        # Corrupted check first
+        if arr.std() < 5:
+            issues.append("blank or corrupted")
+            return issues
+
+        # Blurry check
+        if arr.std() < 15:
+            issues.append("possibly blurry or low contrast")
+
+        # Shadowed check
+        if arr.mean() < 20:
+            issues.append("possibly shadowed or too dark")
+
+    except Exception as e:
+        issues.append(f"could not open: {e}")
+
+    return issues
+
+
+def collect_images(base_path):
+    all_images = []
+    for root, dirs, files in os.walk(base_path):
+        for fname in files:
+            if fname.lower().endswith((".png", ".jpg", ".jpeg", ".bmp", ".tiff")):
+                all_images.append(os.path.join(root, fname))
+    return all_images
+
+
+for dataset_name, dataset_path in [("Mendeley", MENDELEY_PATH), ("Kaggle", KAGGLE_PATH)]:
+    print(f"\n--- {dataset_name} ---")
+    all_images = collect_images(dataset_path)
+
+    # ── Task 1: Scan ALL images for DPI below 200 ──
+    dpi_flagged = []
+    for fpath in all_images:
+        try:
+            img = Image.open(fpath)
+            dpi = img.info.get("dpi", (0, 0))
+
+            if dpi[0] == 0:
+                dpi_flagged.append((os.path.basename(fpath), "no DPI metadata"))
+                removal_log.append({
+                    "filename": os.path.basename(fpath),
+                    "dataset":  dataset_name,
+                    "reason":   "no DPI metadata"
+                })
+            elif dpi[0] < 200:
+                dpi_flagged.append((os.path.basename(fpath), dpi[0]))
+                removal_log.append({
+                    "filename": os.path.basename(fpath),
+                    "dataset":  dataset_name,
+                    "reason":   f"low DPI: {dpi[0]}"
+                })
+        except:
+            pass
+
+    # ── Task 2: Visually inspect random 10% sample ──
+    sample_size    = max(1, int(len(all_images) * 0.1))
+    sample         = random.sample(all_images, sample_size)
+    visual_flagged = []
+
+    for fpath in sample:
+        issues = audit_image_quality(fpath)
+        if issues:
+            visual_flagged.append((os.path.basename(fpath), issues))
+            removal_log.append({
+                "filename": os.path.basename(fpath),
+                "dataset":  dataset_name,
+                "reason":   "; ".join(issues)
+            })
+
+    # ── Summary ──
+    print(f"Total images:          {len(all_images)}")
+    print(f"Low DPI (<200) flags:  {len(dpi_flagged)}")
+
+    if len(dpi_flagged) == len(all_images):
+        print(f"  ⚠ NOTE: ALL {dataset_name} images flagged — dataset-wide limitation")
+    else:
+        for fname, dpi in dpi_flagged[:10]:  # show first 10 only
+            print(f"    {fname}: {dpi} DPI")
+        if len(dpi_flagged) > 10:
+            print(f"    ... and {len(dpi_flagged) - 10} more")
+
+    print(f"10% sample inspected:  {sample_size}")
+    print(f"Visual flags:          {len(visual_flagged)}")
+
+    if visual_flagged:
+        print(f"\n  Visual inspection flags:")
+        for fname, issues in visual_flagged:
+            print(f"    {fname}: {'; '.join(issues)}")
 
 # ══════════════════════════════════════════════════════════════════════════════
 # 4. KAGGLE DYSGRAPHIA
