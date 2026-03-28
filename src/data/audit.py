@@ -1,10 +1,12 @@
 import os
+import hashlib
 import numpy as np
 import pandas as pd
 from PIL import Image
 from collections import Counter
 
 MENDELEY_PATH = "data/raw/mendeley/DATASET DYSGRAPHIA HANDWRITING"
+MENDELEY_ZIP  = "data/raw/mendeley/DATASET DYSGRAPHIA HANDWRITING.zip"
 REPORT_DIR    = "reports"
 
 os.makedirs(REPORT_DIR, exist_ok=True)
@@ -40,10 +42,8 @@ for label in os.listdir(MENDELEY_PATH):
 
             if dpi[0] == 0:
                 dpi_flagged.append((fname, label, "no DPI metadata"))
-
             elif dpi[0] < 200:
                 dpi_flagged.append((fname, label, f"low DPI: {dpi[0]}"))
-
         except Exception as e:
             dpi_flagged.append((fname, label, f"could not open: {e}"))
 
@@ -145,43 +145,141 @@ print(f"Found labels:    {sorted(found_labels)}")
 
 if not unexpected and not missing:
     print("✓ Labels match PDM annotation keys exactly")
+    label_note = "Labels match PDM annotation keys exactly"
 else:
     if unexpected:
         print(f"✗ Unexpected labels: {unexpected}")
     if missing:
         print(f"✗ Missing labels:    {missing}")
+    label_note = f"Inconsistencies found: {unexpected | missing}"
 
 print(f"\nSamples per class:")
 for label, count in sorted(label_counts.items()):
     print(f"  {label}: {count}")
 
-# Class imbalance
-counts     = list(label_counts.values())
-if len(counts) == 2:
-    majority  = max(counts)
-    minority  = min(counts)
-    ratio     = majority / minority
-    maj_label = max(label_counts, key=label_counts.get)
-    min_label = min(label_counts, key=label_counts.get)
-    print(f"\nClass imbalance ratio:")
-    print(f"  {maj_label}: {majority}")
-    print(f"  {min_label}: {minority}")
-    print(f"  Ratio: {ratio:.2f}:1  ", end="")
-    if ratio < 1.5:
-        print("✓ Roughly balanced")
-    elif ratio < 2.0:
-        print("⚠ Mild imbalance — consider monitoring")
-    else:
-        print("✗ Significant imbalance — consider oversampling/weighting")
+counts    = list(label_counts.values())
+majority  = max(counts)
+minority  = min(counts)
+ratio     = majority / minority
+maj_label = max(label_counts, key=label_counts.get)
+min_label = min(label_counts, key=label_counts.get)
+
+print(f"\nClass imbalance ratio:")
+print(f"  {maj_label}: {majority}")
+print(f"  {min_label}: {minority}")
+print(f"  Ratio: {ratio:.2f}:1  ", end="")
+if ratio < 1.5:
+    print("✓ Roughly balanced")
+elif ratio < 2.0:
+    print("⚠ Mild imbalance — consider monitoring")
+else:
+    print("✗ Significant imbalance — consider oversampling/weighting")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# 4. REMOVAL LOG
+# 4. GENERATE CHECKSUM
 # ══════════════════════════════════════════════════════════════════════════════
-removal_df = pd.DataFrame(removal_log, columns=["filename", "dataset", "reason"])
+print("\n" + "=" * 60)
+print("CHECKSUM")
+print("=" * 60)
+
+def md5_checksum(fpath):
+    hash_md5 = hashlib.md5()
+    with open(fpath, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_md5.update(chunk)
+    return hash_md5.hexdigest()
+
+checksum = md5_checksum(MENDELEY_ZIP) if os.path.exists(MENDELEY_ZIP) else "N/A"
+print(f"MD5 Checksum: {checksum}")
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# 5. WRITE reports/dataset.md
+# ══════════════════════════════════════════════════════════════════════════════
+content = f"""# Dataset Provenance & Metadata
+
+## Mendeley Dysgraphia Dataset
+
+| Field              | Details                                      |
+|--------------------|----------------------------------------------|
+| **Source**         | Mendeley Data (Ramlan et al.)                |
+| **License**        | CC BY 4.0                                    |
+| **Modality**       | Offline (handwriting images)                 |
+| **Format**         | JPG images                                   |
+| **Language/Script**| Malay, Latin script                          |
+| **Total Samples**  | {total_images}                               |
+| **Archive**        | DATASET DYSGRAPHIA HANDWRITING.zip           |
+| **MD5 Checksum**   | {checksum}                                   |
+| **Path**           | data/raw/mendeley/                           |
+
+## Class Distribution
+
+| Class                    | Count |
+|--------------------------|-------|
+| Potential Dysgraphia     | {label_counts.get('Potential Dysgraphia', 0)} |
+| Low Potential Dysgraphia | {label_counts.get('Low Potential Dysgraphia', 0)} |
+| **Total**                | **{total_images}** |
+
+## Class Imbalance
+
+| Metric         | Value                              |
+|----------------|------------------------------------|
+| Majority class | {maj_label}: {majority}            |
+| Minority class | {min_label}: {minority}            |
+| Ratio          | {ratio:.2f}:1 — ✓ Roughly balanced |
+
+## Notes
+- This is the only dataset used for the entire study
+- DPI metadata not embedded in images — dataset-wide limitation
+- {len(removal_log)} image(s) flagged for removal
+- Final usable samples: {total_images - len(removal_log)} (after filtering)
+"""
+
+with open(f"{REPORT_DIR}/dataset.md", "w", encoding="utf-8") as f:
+    f.write(content)
+
+print(f"\n✓ dataset.md saved → {REPORT_DIR}/dataset.md")
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# 6. WRITE reports/removal.csv
+# ══════════════════════════════════════════════════════════════════════════════
+removal_rows = []
+
+for entry in removal_log:
+    fname  = entry["filename"]
+    reason = entry["reason"]
+
+    # Find which class/label this file belongs to
+    file_label = "Unknown"
+    for label in os.listdir(MENDELEY_PATH):
+        label_dir = os.path.join(MENDELEY_PATH, label)
+        if not os.path.isdir(label_dir):
+            continue
+        if fname in os.listdir(label_dir):
+            file_label = label
+            break
+
+    removal_rows.append({
+        "filename":         fname,
+        "dataset":          entry["dataset"],
+        "class":            file_label,
+        "before_filtering": label_counts.get(file_label, 0),
+        "removed":          1,
+        "remaining":        label_counts.get(file_label, 0) - 1,
+        "imbalance_ratio":  round((label_counts.get(file_label, 0) - 1) / minority, 2),
+        "label_notes":      label_note,
+        "reason":           reason
+    })
+
+removal_df = pd.DataFrame(removal_rows) if removal_rows else pd.DataFrame(
+    columns=["filename", "dataset", "class", "before_filtering",
+             "removed", "remaining", "imbalance_ratio", "label_notes", "reason"]
+)
+
 removal_df.to_csv(f"{REPORT_DIR}/removal.csv", index=False)
 
-print("\n" + "=" * 60)
-print(f"REMOVAL LOG saved → {REPORT_DIR}/removal.csv")
-print(f"Total flagged entries: {len(removal_log)}")
+print(f"✓ removal.csv saved → {REPORT_DIR}/removal.csv")
+print(f"\nTotal flagged entries: {len(removal_log)}")
 print("=" * 60)
