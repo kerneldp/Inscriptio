@@ -137,14 +137,37 @@ print("\n" + "=" * 60)
 print("PARTITION SUMMARY")
 print("=" * 60)
 
+summary_rows = []
 for split_name, idx in splits.items():
     split_labels = labels[idx]
-    print(f"\n  {split_name}:")
-    print(f"    pd:    {(split_labels == 'pd').sum()}")
-    print(f"    lpd:   {(split_labels == 'lpd').sum()}")
-    print(f"    total: {len(idx)}")
+    pd_count     = (split_labels == "pd").sum()
+    lpd_count    = (split_labels == "lpd").sum()
+    pd_ratio     = (split_labels == "pd").mean() * 100
+    diff         = abs(pd_ratio - original_ratio)
 
-# Save partition log
-log_df = pd.DataFrame(copy_log)
-log_df.to_csv(f"{REPORT_DIR}/partition_log.csv", index=False)
-print(f"\n✓ Partition log saved → {REPORT_DIR}/partition_log.csv")
+    print(f"\n  {split_name}:")
+    print(f"    pd:    {pd_count}")
+    print(f"    lpd:   {lpd_count}")
+    print(f"    total: {len(idx)}")
+    print(f"    pd%:   {pd_ratio:.1f}%  (diff: {diff:.1f}%)  {'✓' if diff <= 2.0 else '✗'}")
+
+    summary_rows.append({
+        "split":                    split_name,
+        "pd":                       pd_count,
+        "lpd":                      lpd_count,
+        "total":                    len(idx),
+        "pd_ratio_%":               round(pd_ratio, 1),
+        "diff_from_original_%":     round(diff, 1),
+        "within_2%":                "✓" if diff <= 2.0 else "✗"
+    })
+
+# Save logs
+copy_df    = pd.DataFrame(copy_log)
+summary_df = pd.DataFrame(summary_rows)
+
+copy_df.to_csv(f"{REPORT_DIR}/partition_log.csv", index=False)
+summary_df.to_csv(f"{REPORT_DIR}/partition_summary.csv", index=False)
+
+print(f"\n✓ Partition log saved     → {REPORT_DIR}/partition_log.csv")
+print(f"✓ Partition summary saved → {REPORT_DIR}/partition_summary.csv")
+print("=" * 60)
