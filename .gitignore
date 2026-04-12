@@ -1,0 +1,4 @@
+# Ignore downloaded dataset archives and extracted images
+*.tar.gz
+*.zip
+/data/
