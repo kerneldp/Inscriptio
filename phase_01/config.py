@@ -2,17 +2,23 @@
 config.py — Central configuration for Phase 01 preprocessing pipeline.
 All augmentation hyperparameters and random seeds live here for full reproducibility.
 """
+from pathlib import Path
 
 # ── Reproducibility ────────────────────────────────────────────────────────────
 SEED = 42
 
 # ── Dataset paths ──────────────────────────────────────────────────────────────
-RAW_MENDELEY_DIR  = "data/raw/mendeley/DATASET DYSGRAPHIA HANDWRITING"
-PROCESSED_DIR     = "data/processed"
-AUGMENTED_DIR     = "data/augmented"
-MANIFESTS_DIR     = "data/manifests"
-REPORTS_DIR       = "reports"
-SPOTCHECK_DIR     = "reports/spotcheck"
+# __file__ finds the absolute path of this config.py file on any machine.
+# .resolve().parent gets the folder containing this file (project root).
+BASE_DIR = Path(__file__).resolve().parent
+
+# All paths are built dynamically relative to the project root.
+RAW_MENDELEY_DIR  = BASE_DIR / "data/raw/mendeley/DATASET DYSGRAPHIA HANDWRITING"
+PROCESSED_DIR     = BASE_DIR / "data/processed"
+AUGMENTED_DIR     = BASE_DIR / "data/augmented"
+MANIFESTS_DIR     = BASE_DIR / "data/manifests"
+REPORTS_DIR       = BASE_DIR / "reports"
+SPOTCHECK_DIR     = BASE_DIR / "reports/spotcheck"
 
 # ── Split ratios ───────────────────────────────────────────────────────────────
 TRAIN_RATIO = 0.50
@@ -51,5 +57,4 @@ TIER3_PARAMS = {
 }
 
 # ── Augmentation pool size target ─────────────────────────────────────────────
-# Final augmented pool must be ≥10× the original training set size
 MIN_AUG_MULTIPLIER = 162
