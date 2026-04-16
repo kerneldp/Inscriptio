@@ -10,7 +10,9 @@ SEED = 42
 # ── Dataset paths ──────────────────────────────────────────────────────────────
 # __file__ finds the absolute path of this config.py file on any machine.
 # .resolve().parent gets the folder containing this file (project root).
-BASE_DIR = Path(__file__).resolve().parent
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+# BASE_DIR = Path(__file__).resolve().parent
 
 # All paths are built dynamically relative to the project root.
 RAW_MENDELEY_DIR  = BASE_DIR / "data/raw/mendeley/DATASET DYSGRAPHIA HANDWRITING"
