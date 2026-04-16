@@ -52,4 +52,4 @@ TIER3_PARAMS = {
 
 # ── Augmentation pool size target ─────────────────────────────────────────────
 # Final augmented pool must be ≥10× the original training set size
-MIN_AUG_MULTIPLIER = 162
+MIN_AUG_MULTIPLIER = 10
