@@ -33,6 +33,11 @@ CHECKPOINT_PHASE_A = str(Path(CHECKPOINTS_DIR) / "phase_a_frozen.h5")
 CHECKPOINT_PROD = str(Path(CHECKPOINTS_DIR) / "production_model_final.h5")
 TRAINING_METRICS = str(Path(LOGS_DIR) / "training_metrics.csv")
 
+# Native Keras format checkpoints (preferred for TF/Keras >= 2.13).
+# H5 is legacy and may fail to reload for nested Functional models.
+CHECKPOINT_PHASE_A_KERAS = str(Path(CHECKPOINTS_DIR) / "phase_a_frozen.keras")
+CHECKPOINT_PROD_KERAS = str(Path(CHECKPOINTS_DIR) / "production_model_final.keras")
+
 # ── Data/model parameters ────────────────────────────────────────────────────
 IMAGE_SIZE = (224, 224)
 NUM_CLASSES = 2

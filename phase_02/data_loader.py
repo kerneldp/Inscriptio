@@ -55,7 +55,9 @@ def _maybe_rewrite_manifest_path(path: str) -> str:
 
 def _load_image(path: str) -> tf.Tensor:
     """Read image from disk → float32 tensor (224, 224, 1), range [0, 1]."""
-    path = _maybe_rewrite_manifest_path(path)
+    # NOTE: `path` is a tf.string Tensor when used inside `tf.data.Dataset.map`.
+    # Any OS-level rewriting must be done before building the dataset (in pandas),
+    # not here inside the graph.
     raw = tf.io.read_file(path)
     img = tf.image.decode_jpeg(raw, channels=1)
     img = tf.cast(img, tf.float32) / 255.0
@@ -230,7 +232,7 @@ class DataLoader:
             f"DATA LEAKAGE DETECTED — {len(collisions)} filename collisions across splits: "
             f"{list(collisions)[:10]}"
         )
-        print("[DataLoader] ✓ Zero data leakage verified across all splits.")
+        print("[DataLoader] OK: Zero data leakage verified across all splits.")
 
 
 # ─────────────────────────────────────────────────────────────────────────────

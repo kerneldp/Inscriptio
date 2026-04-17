@@ -54,7 +54,7 @@ class SensitivityMonitor(tf.keras.callbacks.Callback):
                         break
 
 
-def get_phase_a_callbacks(checkpoint_path: str = config.CHECKPOINT_PHASE_A,
+def get_phase_a_callbacks(checkpoint_path: str = config.CHECKPOINT_PHASE_A_KERAS,
                           metrics_csv: str = config.TRAINING_METRICS) -> list:
     """Return callbacks for Phase A (frozen base) training."""
     os.makedirs(os.path.dirname(checkpoint_path), exist_ok=True)
@@ -88,7 +88,7 @@ def get_phase_a_callbacks(checkpoint_path: str = config.CHECKPOINT_PHASE_A,
     ]
 
 
-def get_phase_b_callbacks(checkpoint_path: str = config.CHECKPOINT_PROD,
+def get_phase_b_callbacks(checkpoint_path: str = config.CHECKPOINT_PROD_KERAS,
                           metrics_csv: str = config.TRAINING_METRICS) -> list:
     """Return callbacks for Phase B (full unfreeze) training."""
     os.makedirs(os.path.dirname(checkpoint_path), exist_ok=True)
