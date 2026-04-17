@@ -17,8 +17,45 @@ import config
 # Low-level image reader
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _maybe_rewrite_manifest_path(path: str) -> str:
+    """
+    Manifest CSVs may contain absolute paths from another machine.
+    If the path doesn't exist, attempt to rewrite it to the current repo path.
+
+    Strategy:
+    - If path exists: return as-is
+    - Else: locate the portion after ".../aikonic/" or "...\\aikonic\\"
+      and join it with this workspace's BASE_DIR.
+    """
+    if not path:
+        return path
+    if os.path.exists(path):
+        return path
+
+    lower = path.lower()
+    anchor = "\\aikonic\\"
+    idx = lower.find(anchor)
+    if idx != -1:
+        rel = path[idx + len(anchor) :].lstrip("\\/")  # keep relative subpath
+        candidate = os.path.join(str(config.BASE_DIR), rel)
+        if os.path.exists(candidate):
+            return candidate
+
+    # Fallback: try to detect ".../data/..." segment and re-root it.
+    for seg in ["\\data\\", "/data/"]:
+        idx2 = lower.find(seg)
+        if idx2 != -1:
+            rel2 = path[idx2 + 1 :].lstrip("\\/")  # "data/..."
+            candidate2 = os.path.join(str(config.BASE_DIR), rel2)
+            if os.path.exists(candidate2):
+                return candidate2
+
+    return path
+
+
 def _load_image(path: str) -> tf.Tensor:
     """Read image from disk → float32 tensor (224, 224, 1), range [0, 1]."""
+    path = _maybe_rewrite_manifest_path(path)
     raw = tf.io.read_file(path)
     img = tf.image.decode_jpeg(raw, channels=1)
     img = tf.cast(img, tf.float32) / 255.0
@@ -80,6 +117,8 @@ class DataLoader:
         missing = required - set(df.columns)
         if missing:
             raise ValueError(f"Manifest {csv_path} missing columns: {missing}")
+        # Normalize any foreign absolute paths to this repo when possible.
+        df["image_path"] = df["image_path"].astype(str).map(_maybe_rewrite_manifest_path)
         return df
 
     def _df_to_dataset(
@@ -124,6 +163,33 @@ class DataLoader:
                 "Test set must contain original unaugmented Mendeley samples ONLY."
             )
         return self._df_to_dataset(self._test_df, shuffle=False, augment=False)
+
+    def get_arrays(self, split: str) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Load an entire split into numpy arrays (X, y) for evaluation/CV.
+        - X shape: (N, 224, 224, 1) float32 in [0, 1]
+        - y shape: (N,) int labels {0,1}
+        """
+        split = split.lower().strip()
+        if split == "train":
+            df = self._train_df
+        elif split == "val":
+            df = self._val_df
+        elif split == "test":
+            df = self._test_df
+        else:
+            raise ValueError("split must be one of: 'train', 'val', 'test'")
+
+        paths = df["image_path"].astype(str).tolist()
+        y = df["label"].astype(int).to_numpy()
+
+        # Load images eagerly using the same tf ops (keeps preprocessing identical)
+        xs = []
+        for p in paths:
+            img = _load_image(p)
+            xs.append(img.numpy())
+        X = np.stack(xs, axis=0).astype("float32")
+        return X, y
 
     def get_class_weights(self) -> dict:
         """
