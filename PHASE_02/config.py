@@ -72,7 +72,7 @@ TIER_WEIGHTS = {
 # ─────────────────────────────────────────────────────────────────────────────
 DENSE_UNITS = 128
 ACTIVATION = "hard_swish"
-DROPOUT_RATE = 0.3
+DROPOUT_RATE = 0.5
 GRAD_CAM_LAYER = "Conv_2"  # last conv layer name in MobileNetV3-Small
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -85,11 +85,11 @@ PHASE_A_LR = 1e-4
 PHASE_A_EPOCHS = 30
 PHASE_A_ES_PATIENCE = 10
 
-# Phase B — partial unfreeze (top % of base layers)
-PHASE_B_LR = 1e-6
+# Phase B — partial unfreeze (top 20% of base layers)
+PHASE_B_LR = 5e-7
 PHASE_B_EPOCHS = 50
 PHASE_B_ES_PATIENCE = 15
-PHASE_B_UNFREEZE_FRACTION = 0.30
+PHASE_B_UNFREEZE_FRACTION = 0.20
 
 # ─────────────────────────────────────────────────────────────────────────────
 # EVALUATION THRESHOLDS
