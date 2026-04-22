@@ -72,7 +72,7 @@ TIER_WEIGHTS = {
 # ─────────────────────────────────────────────────────────────────────────────
 DENSE_UNITS = 128
 ACTIVATION = "hard_swish"
-DROPOUT_RATE = 0.4
+DROPOUT_RATE = 0.3
 GRAD_CAM_LAYER = "Conv_2"  # last conv layer name in MobileNetV3-Small
 
 # ─────────────────────────────────────────────────────────────────────────────
