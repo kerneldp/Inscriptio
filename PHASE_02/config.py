@@ -85,11 +85,11 @@ PHASE_A_LR = 1e-4
 PHASE_A_EPOCHS = 30
 PHASE_A_ES_PATIENCE = 10
 
-# Phase B — partial unfreeze (top 20% of base layers)
+# Phase B — partial unfreeze (top % of base layers)
 PHASE_B_LR = 1e-6
 PHASE_B_EPOCHS = 50
 PHASE_B_ES_PATIENCE = 15
-PHASE_B_UNFREEZE_FRACTION = 0.20
+PHASE_B_UNFREEZE_FRACTION = 0.30
 
 # ─────────────────────────────────────────────────────────────────────────────
 # EVALUATION THRESHOLDS
