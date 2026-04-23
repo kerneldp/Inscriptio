@@ -89,7 +89,7 @@ PHASE_A_ES_PATIENCE = 10
 PHASE_B_LR = 5e-7
 PHASE_B_EPOCHS = 50
 PHASE_B_ES_PATIENCE = 15
-PHASE_B_UNFREEZE_FRACTION = 0.20
+PHASE_B_UNFREEZE_FRACTION = 0.30
 
 # ─────────────────────────────────────────────────────────────────────────────
 # EVALUATION THRESHOLDS
