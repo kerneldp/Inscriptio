@@ -1,0 +1,414 @@
+/* ============================================================
+   inscriptio — base.css
+   Shared CSS variables, resets, and typography
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Figtree:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Color Palette */
+  --ink:        #0d1117;
+  --paper:      #f7f4ef;
+  --slate:      #2a3441;
+  --teal:       #0e9fa0;
+  --teal-dim:   #0b7f80;
+  --teal-bg:    #eaf4f4;
+  --amber:      #e8a020;
+  --amber-bg:   #fff8ed;
+  --danger:     #c0392b;
+  --danger-bg:  #fdf0ee;
+  --mist:       #f0ede8;
+  --rule:       #ddd8d0;
+  --ghost:      #8a8f9a;
+  --card:       #ffffff;
+
+  /* Layout */
+  --sidebar-w:     240px;
+  --sidebar-right: 300px;
+}
+
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Figtree', sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+/* ── Typography helpers ── */
+.font-serif  { font-family: 'DM Serif Display', serif; }
+.font-mono   { font-family: 'DM Mono', monospace; }
+.font-sans   { font-family: 'Figtree', sans-serif; }
+
+/* ── Shared sidebar ── */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--ink);
+  display: flex;
+  flex-direction: column;
+  padding: 28px 0;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 100;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 24px 28px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+
+.brand-mark {
+  width: 34px; height: 34px;
+  background: var(--teal);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.brand-mark svg {
+  width: 20px; height: 20px;
+  fill: none; stroke: #fff; stroke-width: 2;
+}
+
+.brand-text {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.15rem;
+  color: #fff;
+  letter-spacing: -0.01em;
+}
+
+.brand-text em {
+  color: var(--teal);
+  font-style: italic;
+}
+
+.nav {
+  padding: 20px 12px;
+  flex: 1;
+}
+
+.nav-section-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #4a5568;
+  padding: 0 12px;
+  margin-bottom: 8px;
+  margin-top: 20px;
+  display: block;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  margin-bottom: 2px;
+  color: #6b7280;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.nav-item:hover { background: rgba(255,255,255,0.06); color: #ddd; }
+.nav-item.active { background: rgba(14,159,160,0.15); color: var(--teal); }
+
+.nav-icon { width: 18px; text-align: center; font-size: 0.9rem; flex-shrink: 0; }
+
+.nav-badge {
+  margin-left: auto;
+  background: var(--danger);
+  color: #fff;
+  border-radius: 10px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  font-family: 'DM Mono', monospace;
+}
+
+.sidebar-footer {
+  padding: 20px 24px 0;
+  border-top: 1px solid rgba(255,255,255,0.07);
+}
+
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar {
+  width: 34px; height: 34px;
+  background: var(--teal);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Serif Display', serif;
+  font-size: 0.85rem;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.user-info { flex: 1; overflow: hidden; }
+
+.user-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #ddd;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-role {
+  font-size: 0.68rem;
+  font-family: 'DM Mono', monospace;
+  color: var(--teal);
+}
+
+/* ── Shared topbar ── */
+.topbar {
+  background: var(--card);
+  border-bottom: 1px solid var(--rule);
+  padding: 16px 36px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.topbar-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.3rem;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+  flex: 1;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--ghost);
+  margin-top: 4px;
+}
+
+.breadcrumb a {
+  color: var(--teal);
+  text-decoration: none;
+}
+
+.breadcrumb a:hover { text-decoration: underline; }
+
+/* ── Shared section card ── */
+.section-card {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--rule);
+  gap: 12px;
+}
+
+.section-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.05rem;
+  color: var(--ink);
+  flex: 1;
+}
+
+.section-action {
+  font-size: 0.78rem;
+  color: var(--teal);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ── Field shared styles ── */
+.field-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ghost);
+  margin-bottom: 10px;
+  display: block;
+}
+
+.field-input {
+  width: 100%;
+  padding: 13px 16px;
+  border: 1.5px solid var(--rule);
+  border-radius: 10px;
+  font-family: 'Figtree', sans-serif;
+  font-size: 0.9rem;
+  color: var(--ink);
+  background: #fff;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.field-input:focus { border-color: var(--teal); }
+.field-input::placeholder { color: #bbb; }
+
+.field-select {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid var(--rule);
+  border-radius: 8px;
+  font-family: 'Figtree', sans-serif;
+  font-size: 0.88rem;
+  color: var(--ink);
+  background: #fff;
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.field-select:focus { border-color: var(--teal); }
+
+.select-wrap { position: relative; }
+.select-wrap::after {
+  content: '▾';
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ghost);
+  pointer-events: none;
+}
+
+.field-group { margin-bottom: 18px; }
+
+/* ── Status pills ── */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.status-pill.potential { background: var(--danger-bg); color: var(--danger); }
+.status-pill.low       { background: var(--teal-bg); color: var(--teal-dim); }
+.status-pill.pending   { background: var(--amber-bg); color: #b07010; }
+
+.status-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* ── Stat chips ── */
+.stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 500;
+  margin-top: 8px;
+}
+
+.stat-chip.up    { background: var(--teal-bg); color: var(--teal-dim); }
+.stat-chip.warn  { background: var(--amber-bg); color: #b07010; }
+.stat-chip.alert { background: var(--danger-bg); color: var(--danger); }
+
+/* ── Dev note ── */
+.dev-note {
+  background: #f0f4ff;
+  border: 1px dashed #b0bfff;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  color: #4a5ccc;
+  line-height: 1.6;
+}
+
+.dev-note::before { content: '// DEV NOTE — '; font-weight: 500; }
+
+/* ── Main layout wrapper ── */
+.main {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.content { padding: 36px; }
+
+/* ── Action button ── */
+.action-btn {
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--rule);
+  background: #fff;
+  font-family: 'Figtree', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--teal);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.action-btn:hover { background: var(--teal); color: #fff; border-color: var(--teal); }
+
+/* ── Submit / primary button ── */
+.submit-btn {
+  width: 100%;
+  padding: 14px;
+  background: var(--teal);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Figtree', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.01em;
+  transition: background 0.2s, transform 0.1s;
+  margin-bottom: 16px;
+}
+
+.submit-btn:hover { background: var(--teal-dim); transform: translateY(-1px); }
+
+/* ── Animations ── */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

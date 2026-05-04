@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>inscriptio — Upload &amp; Processing</title>
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/upload.css">
+</head>
+<body class="upload-page">
+
+<!-- ═══════════════════════════════════════════════
+     LEFT SIDEBAR
+═══════════════════════════════════════════════ -->
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-mark">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2">
+        <path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+      </svg>
+    </div>
+    <span class="brand-text">inscri<em>ptio</em></span>
+  </div>
+
+  <div class="nav">
+    <span class="nav-section-label">Main</span>
+    <div class="nav-item" data-page="dashboard"><span class="nav-icon">⊞</span> Dashboard</div>
+    <div class="nav-item active" data-page="upload"><span class="nav-icon">↑</span> Upload</div>
+    <div class="nav-item" data-page="report"><span class="nav-icon">⚡</span> Reports</div>
+
+    <span class="nav-section-label">Tools</span>
+    <div class="nav-item" data-page="dashboard"><span class="nav-icon">⟺</span> Compare</div>
+    <div class="nav-item" data-page="dashboard"><span class="nav-icon">☰</span> Archive</div>
+
+    <span class="nav-section-label">System</span>
+    <div class="nav-item" data-page="dashboard"><span class="nav-icon">⚙</span> Settings</div>
+    <div class="nav-item" data-page="dashboard"><span class="nav-icon">?</span> Help</div>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-chip">
+      <div class="avatar" id="sidebar-avatar">–</div>
+      <div class="user-info">
+        <div class="user-name" id="sidebar-name">Loading…</div>
+        <div class="user-role" id="sidebar-role">–</div>
+      </div>
+      <button id="logout-btn" title="Log out"
+        style="background:none;border:none;cursor:pointer;color:#4a5568;font-size:0.9rem;padding:4px;">
+        ⇥
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════
+     MAIN CONTENT
+═══════════════════════════════════════════════ -->
+<div class="main">
+
+  <div class="topbar">
+    <div>
+      <h1 class="topbar-title">Upload &amp; Processing</h1>
+      <div class="breadcrumb">
+        <a href="#" onclick="navigate('dashboard'); return false;">Dashboard</a>
+        <span>›</span>
+        <span>New Screening</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="content upload-grid">
+
+    <!-- ── LEFT: Upload + Preview ────────────────────────── -->
+    <div class="left-col">
+
+      <!-- Upload Zone -->
+      <div class="section-card">
+        <div class="card-header">
+          <div class="card-header-icon">📤</div>
+          <div>
+            <div class="card-title">Image Drop Zone</div>
+            <div class="card-sub">Upload handwriting sample for analysis</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <!-- DEV NOTE: Wire drag-and-drop events to state in upload.js.
+               Validate: image/png or image/jpeg only, max 10 MB. -->
+          <div class="dropzone" id="dropzone">
+            <span class="dz-icon">🖼️</span>
+            <div class="dz-title">Drop the handwriting image here</div>
+            <div class="dz-sub">Drag and drop a PNG or JPG file of the student's<br>handwriting sample onto this area.</div>
+            <button class="dz-btn" id="browse-btn">📁 Browse Files</button>
+            <div class="dz-formats">
+              <span class="format-badge">PNG</span>
+              <span class="format-badge">JPG / JPEG</span>
+              <span class="format-badge">Max 10 MB</span>
+            </div>
+          </div>
+
+          <!-- File info row (shown after selection) -->
+          <div class="file-info" id="file-info" style="display:none;">
+            <span class="file-icon">🖼️</span>
+            <div>
+              <div class="file-name" id="file-name">filename.jpg</div>
+              <div class="file-size" id="file-size">0 KB</div>
+            </div>
+            <button class="file-clear" id="file-clear" title="Remove file">✕</button>
+          </div>
+
+          <!-- Hidden real file input -->
+          <input type="file" id="file-input" accept="image/png,image/jpeg">
+
+          <div class="dev-note" style="margin-top:14px;">
+            PLACEHOLDER — Drag-drop and file-select wired in upload.js. On file drop/select, validates type and size, displays preview. Replace preview binarization with real backend call to POST /api/preprocess/preview.
+          </div>
+        </div>
+      </div>
+
+      <!-- Before vs. After Preview -->
+      <div class="section-card">
+        <div class="card-header">
+          <div class="card-header-icon">🔬</div>
+          <div>
+            <div class="card-title">Preprocessing Preview</div>
+            <div class="card-sub">Before vs. After — confirms AI input quality</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="preview-grid">
+
+            <!-- Original -->
+            <div class="preview-panel">
+              <div class="preview-label">Layer A — Original</div>
+              <!-- DEV NOTE: Replaced with <img> via URL.createObjectURL() in upload.js -->
+              <div id="preview-original">
+                <div class="preview-placeholder">
+                  <span style="font-size:1.8rem">🖊️</span>
+                  <div class="preview-placeholder-text">Original image appears<br>here after upload</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Binarized -->
+            <div class="preview-panel">
+              <div class="preview-label">
+                Layer B — Binarized
+                <span class="dim-badge">224×224</span>
+              </div>
+              <!-- DEV NOTE: Real backend: POST /api/preprocess/preview → binarized_b64.
+                   Prototype uses canvas-based Otsu approximation in upload.js. -->
+              <div id="preview-binarized">
+                <div class="preview-placeholder">
+                  <span style="font-size:1.8rem">⬛</span>
+                  <div class="preview-placeholder-text">Otsu-binarized 224×224<br>tensor appears here</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Preprocessing step indicator -->
+          <div class="process-steps" style="margin-top:20px;">
+            <div class="step">
+              <div class="step-icon pending">○</div>
+              <div>
+                <div class="step-label">Image Uploaded</div>
+                <div class="step-sub">Raw file received</div>
+              </div>
+              <div class="step-status">Waiting</div>
+            </div>
+            <!-- DEV NOTE: Steps 1–3 controlled by upload.js preprocessing state.
+                 Backend should return { steps: [{id, status}] } from preprocess API. -->
+            <div class="step">
+              <div class="step-icon pending">○</div>
+              <div>
+                <div class="step-label">Otsu Binarization</div>
+                <div class="step-sub">Adaptive thresholding to isolate ink</div>
+              </div>
+              <div class="step-status">Waiting</div>
+            </div>
+            <div class="step">
+              <div class="step-icon pending">○</div>
+              <div>
+                <div class="step-label">Resize to 224×224</div>
+                <div class="step-sub">MobileNetV3 input tensor normalization</div>
+              </div>
+              <div class="step-status">Waiting</div>
+            </div>
+            <div class="step">
+              <div class="step-icon pending">○</div>
+              <div>
+                <div class="step-label">Ready for Inference</div>
+                <div class="step-sub">Preprocessed image queued for model</div>
+              </div>
+              <div class="step-status">Waiting</div>
+            </div>
+          </div>
+
+          <div class="dev-note" style="margin-top:14px;">
+            Backend team: POST /api/preprocess/preview — accept multipart image, return { original_b64, binarized_b64, steps: [{id, status}] }. Prototype runs Otsu approximation client-side via canvas.
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /.left-col -->
+
+    <!-- ── RIGHT: Session Details + Analyze ──────────────── -->
+    <div class="right-col">
+
+      <!-- Student metadata -->
+      <div class="section-card">
+        <div class="card-header">
+          <div class="card-header-icon">👤</div>
+          <div>
+            <div class="card-title">Session Details</div>
+            <div class="card-sub">Assign this screening to a student</div>
+          </div>
+        </div>
+        <div class="card-body" style="padding:20px;">
+          <!-- DEV NOTE: Populate student dropdown from GET /api/students?active=true. -->
+          <div class="field-group">
+            <span class="field-label">Select Student</span>
+            <div class="select-wrap">
+              <select class="field-select" id="student-select">
+                <option value="">— Choose a student —</option>
+                <option value="STU-001">Ana Aquino (#STU-001)</option>
+                <option value="STU-002">Ben Lim (#STU-002)</option>
+                <option value="STU-003">Cara Maño (#STU-003)</option>
+                <option value="STU-004">Diego Santos (#STU-004)</option>
+                <option value="STU-005">Elena Villanueva (#STU-005)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <span class="field-label">Class / Section</span>
+            <div class="select-wrap">
+              <select class="field-select">
+                <option>Class A</option>
+                <option>Class B</option>
+                <option>Class C</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <span class="field-label">Session Date</span>
+            <input class="field-input" type="date" value="2025-06-10">
+          </div>
+
+          <div class="field-group">
+            <span class="field-label">Educator Note (Optional)</span>
+            <textarea class="field-input" rows="3" style="resize:vertical;"
+              placeholder="e.g. Student was fatigued; written after recess…"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Analyze button -->
+      <!-- DEV NOTE: onClick → POST /api/analyze { studentId, sessionDate, classId, imageFile }.
+           On success, poll GET /api/report/:reportId until status === "ready", then navigate to report.
+           Loading spinner shown on button during request (handled in upload.js). -->
+      <button class="analyze-btn" id="analyze-btn" disabled>
+        <span>⚡</span>
+        <span id="analyze-btn-text">Run HXAI Analysis</span>
+      </button>
+      <p class="btn-note">Triggers MobileNetV3 + SHAP + Grad-CAM pipeline.<br>Results appear in Report View (~10–30 seconds).</p>
+
+      <div class="dev-note">
+        PLACEHOLDER — POST /api/analyze accepts multipart/form-data. Returns { reportId, studentId, status: "processing" }. Frontend polls GET /api/report/:reportId until status === "ready", then redirects to report page.
+      </div>
+
+      <!-- AI Engine Info -->
+      <div class="algo-box">
+        <div class="algo-title">AI Engine Configuration</div>
+        <!-- DEV NOTE: Replace static values with live GET /api/model/info response.
+             Include model version hash for audit trail. -->
+        <div class="algo-row">
+          <span class="algo-key">Model</span>
+          <span class="algo-val">MobileNetV3-Small</span>
+        </div>
+        <div class="algo-row">
+          <span class="algo-key">Explainability</span>
+          <span class="algo-val">SHAP + Grad-CAM</span>
+        </div>
+        <div class="algo-row">
+          <span class="algo-key">Input Size</span>
+          <span class="algo-val">224 × 224 px</span>
+        </div>
+        <div class="algo-row">
+          <span class="algo-key">Preprocessing</span>
+          <span class="algo-val">Otsu Binarization</span>
+        </div>
+        <div class="algo-row">
+          <span class="algo-key">Output</span>
+          <span class="algo-val">Softmax Confidence %</span>
+        </div>
+        <div class="dev-note">
+          Replace static values above with live GET /api/model/info response. Include model version hash for audit trail.
+        </div>
+      </div>
+
+    </div><!-- /.right-col -->
+  </div><!-- /.content -->
+</div><!-- /.main -->
+
+<script src="../js/app.js"></script>
+<script src="../js/upload.js"></script>
+</body>
+</html>

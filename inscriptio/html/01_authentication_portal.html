@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>inscriptio — Authentication Portal</title>
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/auth.css">
+</head>
+<body class="auth-page">
+
+<!-- ═══════════════════════════════════════════════
+     LEFT BRANDING PANEL
+═══════════════════════════════════════════════ -->
+<div class="left-panel">
+  <div class="brand">
+    <div class="brand-icon">
+      <svg viewBox="0 0 24 24">
+        <path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+      </svg>
+    </div>
+    <span class="brand-name">inscri<em>ptio</em></span>
+  </div>
+
+  <div class="hero-block">
+    <p class="hero-eyebrow">Research Prototype v0.1</p>
+    <h1 class="hero-title">AI-Assisted<br><em>Dysgraphia</em><br>Screening</h1>
+    <p class="hero-desc">An explainable AI tool combining MobileNetV3 with SHAP and Grad-CAM heatmaps to support early identification of dysgraphia through handwriting analysis.</p>
+  </div>
+
+  <div class="trust-badges">
+    <div class="badge">
+      <div class="badge-dot"></div>
+      <span class="badge-text">UNESCO Compliant</span>
+    </div>
+    <div class="badge">
+      <div class="badge-dot"></div>
+      <span class="badge-text">WHO Guidelines</span>
+    </div>
+    <div class="badge">
+      <div class="badge-dot" style="background:var(--amber)"></div>
+      <span class="badge-text">HITL Protocol</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     RIGHT AUTH PANEL
+═══════════════════════════════════════════════ -->
+<div class="right-panel">
+  <div class="auth-card">
+
+    <div class="auth-header">
+      <h2 class="auth-title">Welcome back</h2>
+      <p class="auth-sub">Sign in to access the screening dashboard.</p>
+    </div>
+
+    <!-- Login / Signup tabs -->
+    <div class="tab-row">
+      <div class="tab active" id="tab-login">Log In</div>
+      <div class="tab" id="tab-signup">Sign Up</div>
+    </div>
+
+    <!-- Role selection -->
+    <div class="role-section">
+      <span class="field-label">Your Role</span>
+      <div class="role-toggle">
+        <button class="role-btn active" data-role="educator">
+          <div class="role-icon">🎓</div>
+          <div class="role-info">
+            <span class="role-name">Educator</span>
+            <span class="role-desc-text">Upload &amp; annotate</span>
+          </div>
+        </button>
+        <button class="role-btn" data-role="clinician">
+          <div class="role-icon">🩺</div>
+          <div class="role-info">
+            <span class="role-name">Clinician</span>
+            <span class="role-desc-text">Validate &amp; verify</span>
+          </div>
+        </button>
+      </div>
+      <!-- DEV NOTE: Replace role toggle with backend auth role assignment.
+           JWT payload should include { role: "educator" | "clinician" }.
+           Remove toggle UI and derive role from token instead. -->
+    </div>
+
+    <!-- Error message -->
+    <div class="auth-error" id="auth-error"></div>
+
+    <!-- Signup-only fields (hidden by default) -->
+    <div class="signup-fields" id="signup-fields">
+      <div class="field-group">
+        <span class="field-label">Full Name</span>
+        <input class="field-input" type="text" id="full-name" placeholder="e.g. Maria Reyes">
+      </div>
+    </div>
+
+    <!-- Email -->
+    <div class="field-group">
+      <span class="field-label">Email Address</span>
+      <input class="field-input" type="email" id="email" placeholder="yourname@institution.edu">
+    </div>
+
+    <!-- Password -->
+    <div class="field-group">
+      <span class="field-label">Password</span>
+      <input class="field-input" type="password" id="password" placeholder="••••••••••">
+      <p class="field-hint">Forgot password? <a href="#">Reset here</a></p>
+    </div>
+
+    <!-- Confirm password (signup only) -->
+    <div class="signup-fields" id="signup-fields-confirm">
+      <div class="field-group">
+        <span class="field-label">Confirm Password</span>
+        <input class="field-input" type="password" id="confirm-password" placeholder="••••••••••">
+      </div>
+    </div>
+
+    <!-- Privacy disclaimer -->
+    <div class="privacy-box">
+      <span class="privacy-icon">🔒</span>
+      <div>
+        <div class="privacy-text">
+          <strong>HITL &amp; Data Privacy Notice:</strong> All screenings require human validation before any classification is acted upon. Handwriting images are processed locally and not stored beyond session unless explicitly saved. Compliant with <strong>UNESCO AI Ethics</strong> and <strong>WHO Digital Health</strong> guidelines.
+        </div>
+        <div class="privacy-links">
+          <a class="privacy-link" href="#">Full Privacy Policy</a>
+          <a class="privacy-link" href="#">HITL Protocol</a>
+          <a class="privacy-link" href="#">Data Handling</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <!-- DEV NOTE: Wire onClick to POST /api/auth/login with { email, password, role }.
+         On success, store JWT, redirect to /dashboard. -->
+    <button class="submit-btn" id="submit-btn">
+      <span id="submit-label">Sign In to Dashboard</span>
+    </button>
+
+    <div class="divider">or use a demo account</div>
+
+    <!-- ── Dummy accounts for prototype testing ──
+         Click any row to auto-fill the form above.
+         DEV NOTE: Remove this entire block before production deployment.
+         Credentials are for UI flow testing only — no real auth backend.
+    ── -->
+    <div class="demo-hint">
+      <div class="demo-hint-title">🧪 Prototype Demo Accounts</div>
+
+      <div class="demo-account"
+           data-email="educator@inscriptio.edu"
+           data-password="educator123"
+           data-role="educator">
+        <span class="demo-role-badge educator">Educator</span>
+        <span class="demo-email">educator@inscriptio.edu</span>
+        <span class="demo-fill-btn">↑ fill</span>
+      </div>
+
+      <div class="demo-account"
+           data-email="clinician@inscriptio.edu"
+           data-password="clinician123"
+           data-role="clinician">
+        <span class="demo-role-badge clinician">Clinician</span>
+        <span class="demo-email">clinician@inscriptio.edu</span>
+        <span class="demo-fill-btn">↑ fill</span>
+      </div>
+    </div>
+
+    <!-- DEV NOTE: Placeholder for institutional SSO (e.g. Google Workspace, Microsoft Entra).
+         Remove if project does not require SSO integration. -->
+
+  </div><!-- /.auth-card -->
+</div><!-- /.right-panel -->
+
+<script src="../js/app.js"></script>
+<script src="../js/auth.js"></script>
+</body>
+</html>

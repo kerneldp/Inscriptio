@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>inscriptio — Dashboard</title>
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<body class="dashboard-page">
+
+<!-- ═══════════════════════════════════════════════
+     LEFT SIDEBAR
+═══════════════════════════════════════════════ -->
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-mark">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2">
+        <path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+      </svg>
+    </div>
+    <span class="brand-text">inscri<em>ptio</em></span>
+  </div>
+
+  <div class="nav">
+    <span class="nav-section-label">Main</span>
+    <div class="nav-item active" data-page="dashboard">
+      <span class="nav-icon">⊞</span> Dashboard
+    </div>
+    <div class="nav-item" data-page="upload">
+      <span class="nav-icon">↑</span> Upload
+    </div>
+    <div class="nav-item" data-page="report">
+      <span class="nav-icon">⚡</span> Reports
+      <span class="nav-badge">3</span>
+    </div>
+
+    <span class="nav-section-label">Tools</span>
+    <div class="nav-item" data-page="dashboard">
+      <span class="nav-icon">⟺</span> Compare
+    </div>
+    <div class="nav-item" data-page="dashboard">
+      <span class="nav-icon">☰</span> Archive
+    </div>
+    <div class="nav-item" data-page="dashboard">
+      <span class="nav-icon">↗</span> Export
+    </div>
+
+    <span class="nav-section-label">System</span>
+    <div class="nav-item" data-page="dashboard">
+      <span class="nav-icon">⚙</span> Settings
+    </div>
+    <div class="nav-item" data-page="dashboard">
+      <span class="nav-icon">?</span> Help
+    </div>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-chip">
+      <!-- DEV NOTE: Populated by dashboard.js from session -->
+      <div class="avatar" id="sidebar-avatar">–</div>
+      <div class="user-info">
+        <div class="user-name" id="sidebar-name">Loading…</div>
+        <div class="user-role" id="sidebar-role">–</div>
+      </div>
+      <button id="logout-btn" title="Log out"
+        style="background:none;border:none;cursor:pointer;color:#4a5568;font-size:0.9rem;padding:4px;">
+        ⇥
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════
+     MAIN CONTENT
+═══════════════════════════════════════════════ -->
+<div class="main">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <h1 class="topbar-title">Dashboard</h1>
+    <div class="search-bar">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="student-search" placeholder="Search student ID or name…">
+    </div>
+  </div>
+
+  <!-- Page content -->
+  <div class="content">
+
+    <!-- ── Stats row ────────────────────────────────────── -->
+    <!-- DEV NOTE: Replace all values below with GET /api/stats/summary -->
+    <div class="stats-row">
+      <div class="stat-card teal">
+        <div class="stat-eyebrow">Total Screenings</div>
+        <div class="stat-value">148</div>
+        <div class="stat-sub">All-time records</div>
+        <div class="stat-chip up">↑ +12 this week</div>
+      </div>
+      <div class="stat-card ink">
+        <div class="stat-eyebrow">Pending Reviews</div>
+        <div class="stat-value">9</div>
+        <div class="stat-sub">Awaiting clinician validation</div>
+        <div class="stat-chip warn">⚠ Action needed</div>
+      </div>
+      <div class="stat-card danger">
+        <div class="stat-eyebrow">Flagged — Potential</div>
+        <div class="stat-value">23</div>
+        <div class="stat-sub">High confidence score</div>
+        <div class="stat-chip alert">↑ 3 new today</div>
+      </div>
+      <div class="stat-card amber">
+        <div class="stat-eyebrow">Active Students</div>
+        <div class="stat-value">64</div>
+        <div class="stat-sub">Across all classes</div>
+        <div class="stat-chip up">Stable</div>
+      </div>
+    </div>
+
+    <!-- ── Lower grid ────────────────────────────────────── -->
+    <div class="lower-grid">
+
+      <!-- Student Directory -->
+      <div class="section-card">
+        <div class="section-header">
+          <h2 class="section-title">Student Directory</h2>
+          <span class="section-action" id="add-student-btn">+ Add Student</span>
+        </div>
+
+        <div class="filter-bar">
+          <div class="filter-pill active" data-filter="all">All</div>
+          <div class="filter-pill" data-filter="potential">Potential</div>
+          <div class="filter-pill" data-filter="low">Low Potential</div>
+          <div class="filter-pill" data-filter="pending">Pending</div>
+          <div class="filter-pill" data-filter="class-a">Class A</div>
+          <div class="filter-pill" data-filter="class-b">Class B</div>
+        </div>
+
+        <!-- DEV NOTE: Replace table rows with mapped data from GET /api/students.
+             Each row links to /report/:studentId. Add pagination below table. -->
+        <table>
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Class</th>
+              <th>Last Screened</th>
+              <th>Confidence</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="student-table-body">
+            <tr data-student="Ana Aquino STU-001" data-status="potential">
+              <td>
+                <div class="student-cell">
+                  <div class="stu-avatar">AA</div>
+                  <div>
+                    <div class="stu-name">Ana Aquino</div>
+                    <div class="stu-id">#STU-001</div>
+                  </div>
+                </div>
+              </td>
+              <td class="td-mono">Class A</td>
+              <td class="td-mono">Jun 10, 2025</td>
+              <td class="td-score">87.4%</td>
+              <td><span class="status-pill potential"><span class="status-dot"></span>Potential</span></td>
+              <td><button class="action-btn view-report-btn" data-student="STU-001">View Report</button></td>
+            </tr>
+            <tr data-student="Ben Lim STU-002" data-status="low">
+              <td>
+                <div class="student-cell">
+                  <div class="stu-avatar">BL</div>
+                  <div>
+                    <div class="stu-name">Ben Lim</div>
+                    <div class="stu-id">#STU-002</div>
+                  </div>
+                </div>
+              </td>
+              <td class="td-mono">Class B</td>
+              <td class="td-mono">Jun 8, 2025</td>
+              <td class="td-score">31.2%</td>
+              <td><span class="status-pill low"><span class="status-dot"></span>Low Potential</span></td>
+              <td><button class="action-btn view-report-btn" data-student="STU-002">View Report</button></td>
+            </tr>
+            <tr data-student="Cara Maño STU-003" data-status="pending">
+              <td>
+                <div class="student-cell">
+                  <div class="stu-avatar">CM</div>
+                  <div>
+                    <div class="stu-name">Cara Maño</div>
+                    <div class="stu-id">#STU-003</div>
+                  </div>
+                </div>
+              </td>
+              <td class="td-mono">Class A</td>
+              <td class="td-mono">Jun 7, 2025</td>
+              <td class="td-score">—</td>
+              <td><span class="status-pill pending"><span class="status-dot"></span>Pending</span></td>
+              <td><button class="action-btn view-report-btn" data-student="STU-003">View Report</button></td>
+            </tr>
+            <tr data-student="Diego Santos STU-004" data-status="potential">
+              <td>
+                <div class="student-cell">
+                  <div class="stu-avatar">DS</div>
+                  <div>
+                    <div class="stu-name">Diego Santos</div>
+                    <div class="stu-id">#STU-004</div>
+                  </div>
+                </div>
+              </td>
+              <td class="td-mono">Class C</td>
+              <td class="td-mono">Jun 5, 2025</td>
+              <td class="td-score">72.1%</td>
+              <td><span class="status-pill potential"><span class="status-dot"></span>Potential</span></td>
+              <td><button class="action-btn view-report-btn" data-student="STU-004">View Report</button></td>
+            </tr>
+            <tr data-student="Elena Villanueva STU-005" data-status="low">
+              <td>
+                <div class="student-cell">
+                  <div class="stu-avatar">EV</div>
+                  <div>
+                    <div class="stu-name">Elena Villanueva</div>
+                    <div class="stu-id">#STU-005</div>
+                  </div>
+                </div>
+              </td>
+              <td class="td-mono">Class B</td>
+              <td class="td-mono">Jun 4, 2025</td>
+              <td class="td-score">18.5%</td>
+              <td><span class="status-pill low"><span class="status-dot"></span>Low Potential</span></td>
+              <td><button class="action-btn view-report-btn" data-student="STU-005">View Report</button></td>
+            </tr>
+          </tbody>
+        </table>
+        <!-- DEV NOTE: Replace with dynamic data from GET /api/students?filter=all&page=1.
+             Add pagination component below table. -->
+        <div class="dev-note" style="margin:12px 24px 16px;">
+          PLACEHOLDER rows — Replace with dynamic data from GET /api/students. Add pagination below table.
+        </div>
+      </div>
+
+      <!-- Activity Feed -->
+      <div class="section-card">
+        <div class="section-header">
+          <h2 class="section-title">Recent Activity</h2>
+          <span class="section-action" id="view-all-activity">View all</span>
+        </div>
+        <!-- DEV NOTE: Replace with GET /api/activity/recent?limit=10
+             Poll every 30s or use WebSocket for live updates. -->
+        <div class="activity-list">
+          <div class="activity-item">
+            <div class="activity-dot act-dot-danger"></div>
+            <div class="activity-body">
+              <div class="activity-desc"><strong>STU-001</strong> flagged as <strong>Potential</strong> — confidence 87.4%</div>
+              <div class="activity-time">Today, 2:14 PM</div>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-dot act-dot-teal"></div>
+            <div class="activity-body">
+              <div class="activity-desc">Clinician <strong>validated</strong> report for <strong>STU-004</strong></div>
+              <div class="activity-time">Today, 1:47 PM</div>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-dot act-dot-amber"></div>
+            <div class="activity-body">
+              <div class="activity-desc">New upload queued for <strong>STU-003</strong> — awaiting processing</div>
+              <div class="activity-time">Today, 11:30 AM</div>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-dot act-dot-teal"></div>
+            <div class="activity-body">
+              <div class="activity-desc"><strong>STU-002</strong> report generated — Low Potential (31.2%)</div>
+              <div class="activity-time">Jun 8, 3:02 PM</div>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-dot act-dot-ghost"></div>
+            <div class="activity-body">
+              <div class="activity-desc">Batch export of 5 records to PDF completed</div>
+              <div class="activity-time">Jun 7, 9:15 AM</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /.lower-grid -->
+  </div><!-- /.content -->
+</div><!-- /.main -->
+
+<!-- ── FAB Quick Upload ──
+     DEV NOTE: onClick → navigate to /upload page.
+     Wired via dashboard.js.
+── -->
+<button class="fab" id="fab-upload" title="Quick Upload">
+  <span class="fab-icon">+</span>
+  <span class="fab-label">Quick Upload</span>
+</button>
+
+<script src="../js/app.js"></script>
+<script src="../js/dashboard.js"></script>
+</body>
+</html>
