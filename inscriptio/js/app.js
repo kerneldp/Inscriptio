@@ -61,6 +61,7 @@ const Pages = {
   dashboard: '02_main_dashboard.html',
   upload:    '03_upload_processing.html',
   report:    '04_hxai_report_view.html',
+  compare:   '05_progress_comparison.html',
 };
 
 function navigate(page) {
@@ -71,9 +72,14 @@ function navigate(page) {
 function initSidebarNav() {
   const items = document.querySelectorAll('.nav-item[data-page]');
   items.forEach(item => {
-    item.addEventListener('click', () => {
+    item.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       const page = item.dataset.page;
-      navigate(page);
+      const url = Pages[page];
+      if (url) {
+        window.location.href = url;
+      }
     });
   });
 
@@ -170,3 +176,4 @@ function confirmModal(message, onConfirm) {
     onConfirm();
   });
 }
+
