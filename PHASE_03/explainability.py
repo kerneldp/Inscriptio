@@ -205,7 +205,53 @@ def plot_4_panel_diagnostic(
     plt.show()
     print(f"✓ Diagnostic graphic saved to {save_path}")
 
-    def generate_clinical_narrative(img_array, shap_values, predicted_class, confidence):
+def generate_clinical_narrative(img_array, shap_values, predicted_class, confidence):
+    """
+    Deterministically generates a clinical summary by mathematically
+    mapping SHAP feature attributions to occupational therapy zones,
+    supported by neurodevelopmental literature.
+
+    Clinical Zone Framework:
+    -------------------------
+    - Zone 1 (Morphology): Pixels directly on ink strokes.
+      Maps to Motor Dysgraphia (Deuel, 1995; Chung et al., 2020).
+    - Zone 2 (Kerning): Whitespace INSIDE the writing bounding box.
+      Maps to Spatial Dysgraphia — inter-character spacing deficits
+      (Deuel, 1995; Mather & Wendling, 2011).
+    - Zone 3 (Spatial Planning): Whitespace OUTSIDE the vertical bounding box.
+      Maps to macro-spatial planning failure and margin non-adherence,
+      a hallmark of Spatial Dysgraphia (Deuel, 1995; Beery & Beery, 2010).
+
+    Diagnostic classification follows DSM-5 criteria for Specific Learning
+    Disorder with impairment in written expression (Code 315.2;
+    American Psychiatric Association, 2013).
+
+    References:
+    -----------
+    American Psychiatric Association. (2013). Diagnostic and Statistical
+        Manual of Mental Disorders (5th ed.). https://doi.org/10.1176/appi.books.9780890425596
+
+    Beery, K. E., & Beery, N. A. (2010). The Beery-Buktenica Developmental
+        Test of Visual-Motor Integration: Administration, scoring, and teaching
+        manual (6th ed.). NCS Pearson.
+
+    Chung, P. J., Patel, D. R., & Nizami, I. (2020). Disorder of written
+        expression and dysgraphia: Definition, diagnosis, and management.
+        Translational Pediatrics, 9(Suppl 1), S46–S54.
+        https://doi.org/10.21037/tp.2019.11.01
+
+    Deuel, R. K. (1995). Developmental dysgraphia and motor skills disorders.
+        Journal of Child Neurology, 10(Suppl 1), S6–S8.
+        https://doi.org/10.1177/08830738950100S103
+
+    Döhla, D., & Heim, S. (2016). Developmental dyslexia and dysgraphia:
+        What can we learn from the one about the other?
+        Frontiers in Psychology, 6, 2045.
+        https://doi.org/10.3389/fpsyg.2015.02045
+
+    Mather, N., & Wendling, B. J. (2011). Essentials of dyslexia assessment
+        and intervention. John Wiley & Sons.
+    """
 
     # -------------------------------------------------------------------------
     # 1. Process Base Image
