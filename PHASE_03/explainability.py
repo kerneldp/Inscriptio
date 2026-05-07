@@ -66,3 +66,27 @@ def make_gradcam_heatmap(img_array, model, last_conv_layer_name=None, pred_index
     heatmap = tf.maximum(heatmap, 0) / tf.math.reduce_max(heatmap)
 
     return heatmap.numpy()
+
+
+def generate_shap_values(model, test_image):
+    """
+    Calculates pixel attributions using SHAP's PartitionExplainer,
+    which safely bypasses complex gradient math (like hard_swish).
+    """
+    # 1. Ensure batch dimension exists
+    if len(test_image.shape) == 3:
+        test_image = np.expand_dims(test_image, axis=0)
+
+    # 2. Define the Masker (blurs out parts of the image to see how prediction changes)
+    masker = shap.maskers.Image("inpaint_telea", test_image[0].shape)
+
+    # 3. Create the Explainer wrapping the model's PREDICT function, NOT the graph
+    explainer = shap.Explainer(model.predict, masker, output_names=config.CLASS_NAMES)
+
+    # 4. Calculate SHAP values (max_evals=500 is a good balance of speed/detail)
+    print("Calculating SHAP values (this may take a moment)...")
+    shap_values = explainer(
+        test_image, max_evals=500, outputs=shap.Explanation.argsort.flip[:1]
+    )
+
+    return shap_values
