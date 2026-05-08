@@ -119,6 +119,48 @@ cp .env.example .env
 
 Default `.env` values work out of the box for local development.
 
+---
+
+## Configuration & Demo Mode
+
+All backend settings are managed through the `.env` file and loaded by `settings.py`, which acts as the central config hub for the entire backend. Every module (`auth.py`, `main.py`, etc.) pulls its values from here — so you never need to hardcode anything directly in the code.
+
+### `.env` Settings Explained
+
+| Setting | Default | Description |
+|---|---|---|
+| `ENVIRONMENT` | `dev` | Set to `prod` for production |
+| `API_TITLE` | `Inscriptio API` | Name shown in API docs |
+| `API_VERSION` | `1.0.0` | Version shown in API docs |
+| `SECRET_KEY` | `dev-only-change-me` | Signs JWT tokens — **change this in production** |
+| `JWT_ALGORITHM` | `HS256` | Token encryption algorithm |
+| `TOKEN_EXPIRE_HOURS` | `24` | How long a login session lasts |
+| `CORS_ALLOW_ORIGINS` | `http://localhost:5500` | Frontend URLs allowed to call the API |
+| `DATABASE_URL` | `sqlite:///./inscriptio.db` | Path to the SQLite database |
+| `DEMO_MODE` | `true` | Enables/disables the built-in demo accounts |
+
+### Demo Mode Switch
+
+`DEMO_MODE` works like an on/off switch for the hard-coded demo accounts:
+
+**Demo ON** (`DEMO_MODE=true`) — use this for testing and presentations:
+```env
+DEMO_MODE=true
+```
+Enables login with:
+| Role | Email | Password |
+|---|---|---|
+| Educator | `educator@inscriptio.edu` | `educator123` |
+| Clinician | `clinician@inscriptio.edu` | `clinician123` |
+
+**Demo OFF** (`DEMO_MODE=false`) — use this for real deployment:
+```env
+DEMO_MODE=false
+```
+Demo accounts are disabled. Only users registered via `/api/auth/register` can log in.
+
+> **Important:** Always change `SECRET_KEY` to a long random string before deploying to production.
+
 ### 4. Run the backend API
 
 ```bash
