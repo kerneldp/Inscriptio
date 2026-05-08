@@ -4,6 +4,20 @@ A dysgraphia detection web application powered by a MobileNetV3-Small deep learn
 
 ---
 
+## ⚠️ Python Version Requirement
+
+> **Use Python 3.11.** TensorFlow does **not** support Python 3.12 or higher.
+
+Download Python 3.11 here: https://www.python.org/downloads/release/python-3119/
+
+Verify your version before installing:
+```bash
+python --version
+# Should output: Python 3.11.x
+```
+
+---
+
 ## Project Structure
 
 ```
@@ -17,57 +31,65 @@ Inscriptio/
 │   ├── PHASE_02/             # Model training & evaluation
 │   ├── PHASE_03/             # Grad-CAM & SHAP explainability
 │   └── PHASE_04/             # Full pipeline notebook
-└── inscriptio/python/        # Backend API (FastAPI)
+└── python/                   # Backend API (FastAPI)
 ```
 
 ---
 
-## Requirements
+## Required Downloads
 
-### System
+### 1. Python 3.11
+TensorFlow only supports Python **3.9–3.11**. Python 3.12+ will fail.
 
-- **Python 3.12**
-- **Git**
-- A modern browser (Chrome, Edge, Firefox)
+👉 https://www.python.org/downloads/release/python-3119/
 
-### Python Dependencies
+During installation on Windows, check **"Add Python to PATH"**.
 
-Install all at once:
+---
+
+### 2. Git
+Used to clone the repository.
+
+👉 https://git-scm.com/downloads
+
+---
+
+### 3. Python Packages
+Install all dependencies from `requirements.txt`:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Or manually:
-
-```bash
-pip install tensorflow
-pip install numpy pandas scikit-learn
-pip install opencv-python
-pip install albumentations
-pip install scipy
-pip install tqdm
-pip install shap
-pip install matplotlib
-pip install fastapi uvicorn
-pip install python-multipart
-```
-
-| Package | Used In |
+| Package | Purpose |
 |---|---|
-| `tensorflow` | Model training, inference, Grad-CAM |
-| `numpy` | Array operations across all phases |
-| `pandas` | Manifest CSVs, data handling |
+| `fastapi` | Backend API framework |
+| `uvicorn` | ASGI server to run FastAPI |
+| `python-multipart` | File upload support |
+| `pydantic` / `pydantic-settings` | Data validation & `.env` config |
+| `sqlalchemy` | Database ORM (SQLite) |
+| `python-jose[cryptography]` | JWT authentication tokens |
+| `passlib[bcrypt]` | Password hashing |
+| `tensorflow` | Model inference & Grad-CAM (**requires Python 3.11**) |
+| `numpy` | Array operations |
+| `pandas` | Data handling & manifest CSVs |
 | `scikit-learn` | Train/val/test splits |
 | `opencv-python` | Image preprocessing (Otsu binarization, resize) |
 | `albumentations` | Augmentation pipeline (Phase 1) |
 | `scipy` | Elastic distortion augmentation |
-| `tqdm` | Progress bars during preprocessing |
 | `shap` | SHAP explainability values (Phase 3) |
-| `matplotlib` | Visualization, diagnostic graphics |
-| `fastapi` | Backend API server |
-| `uvicorn` | ASGI server for FastAPI |
-| `python-multipart` | File upload handling |
+| `matplotlib` | Visualizations & diagnostic graphics |
+| `tqdm` | Progress bars during preprocessing |
+
+---
+
+### 4. Mendeley Handwriting Dataset
+The ML pipeline requires the handwriting image dataset. Download it from Mendeley Data and place images under:
+
+```
+model_dev/data/raw/LPD/   ← normal handwriting samples
+model_dev/data/raw/PD/    ← dysgraphia handwriting samples
+```
 
 ---
 
@@ -86,16 +108,28 @@ cd Inscriptio
 pip install -r requirements.txt
 ```
 
-### 3. Run the backend API
+### 3. Configure environment
+
+Copy the example env file and edit if needed:
 
 ```bash
-cd inscriptio/python
-uvicorn main:app --reload --port 8000
+cd python
+cp .env.example .env
 ```
 
-The API will be available at `http://localhost:8000`.
+Default `.env` values work out of the box for local development.
 
-### 4. Run the frontend
+### 4. Run the backend API
+
+```bash
+cd python
+python -m uvicorn main:app --reload --port 8000
+```
+
+The API will be available at: `http://localhost:8000`
+Auto-generated API docs: `http://localhost:8000/docs`
+
+### 5. Run the frontend
 
 Open a **second terminal** at the project root:
 
@@ -109,6 +143,10 @@ Then open your browser and go to:
 http://localhost:5500/inscriptio/html/01_authentication_portal.html
 ```
 
+> **Both servers must be running at the same time** for the app to work.
+
+---
+
 ### Test Accounts
 
 | Role | Email | Password |
@@ -118,27 +156,64 @@ http://localhost:5500/inscriptio/html/01_authentication_portal.html
 
 ---
 
+## API Endpoints
+
+### Auth
+| Method | URL | Description |
+|---|---|---|
+| POST | `/api/auth/register` | Register new user |
+| POST | `/api/auth/login` | Login, returns token |
+| GET | `/api/auth/me` | Get current user info |
+
+### Dashboard
+| Method | URL | Description |
+|---|---|---|
+| GET | `/api/dashboard/summary` | Summary cards data |
+| GET | `/api/students?search=` | Student directory |
+| GET | `/api/activity/recent` | Latest 4 reports |
+
+### Report & ML Pipeline
+| Method | URL | Description |
+|---|---|---|
+| POST | `/api/report/preprocess/preview` | Upload image, return binarized preview |
+| POST | `/api/report/analyze` | Run MobileNetV3 + Grad-CAM + SHAP |
+| GET | `/api/report/{report_id}` | Fetch saved report |
+| POST | `/api/report/{report_id}/validate` | Clinician verify/disagree |
+| PATCH | `/api/report/{report_id}/notes` | Autosave educator notes |
+| POST | `/api/report/{report_id}/save` | Commit to student history |
+
+### Progress & Comparison
+| Method | URL | Description |
+|---|---|---|
+| GET | `/api/students/:id/reports` | All reports for a student |
+| GET | `/api/students/:id/compare?report1_id=&report2_id=` | Side-by-side comparison |
+| GET | `/api/students/:id/trend` | Softmax scores over time |
+
+### History
+| Method | URL | Description |
+|---|---|---|
+| GET | `/api/history?date=&student_class=&label=` | Filtered history |
+| POST | `/api/history/export` | Bulk export records |
+| DELETE | `/api/history/bulk` | Soft delete with reason |
+
+---
+
 ## ML Pipeline (model_dev)
 
-The model development pipeline is split into four phases. Run each notebook in order.
+Run each phase notebook in order. Make sure Jupyter is installed:
+
+```bash
+pip install jupyter
+```
 
 ### Phase 1 — Preprocessing
 **Location:** `model_dev/PHASE_01/`
 
-Standardizes raw handwriting images and generates augmented training data.
+Standardizes raw images and generates augmented training data.
 
 ```bash
 cd model_dev/PHASE_01
 jupyter notebook preprocessing.ipynb
-```
-
-Expected data folder structure before running:
-```
-model_dev/
-└── data/
-    └── raw/
-        ├── LPD/    # Low Potential Dysgraphia samples
-        └── PD/     # Potential Dysgraphia samples
 ```
 
 Outputs to:
@@ -150,7 +225,7 @@ model_dev/data/manifests/   (train.csv, val.csv, test.csv)
 ### Phase 2 — Training & Evaluation
 **Location:** `model_dev/PHASE_02/`
 
-Trains a MobileNetV3-Small model in two stages (frozen base → partial unfreeze).
+Trains MobileNetV3-Small in two stages (frozen base → partial unfreeze).
 
 ```bash
 jupyter notebook training.ipynb
@@ -160,7 +235,7 @@ jupyter notebook validation.ipynb
 
 Outputs to:
 ```
-model_dev/checkpoints/   (production_model.keras, production_model.h5)
+model_dev/checkpoints/   (FINAL_production_model.keras)
 model_dev/logs/
 model_dev/reports/
 ```
@@ -185,19 +260,29 @@ jupyter notebook inscriptio.ipynb
 
 ---
 
-## Dataset
-
-This project uses the **Mendeley Handwriting Dataset**. Download it and place the images under:
+## Backend File Structure
 
 ```
-model_dev/data/raw/LPD/   ← normal handwriting samples
-model_dev/data/raw/PD/    ← dysgraphia handwriting samples
+python/
+├── main.py          ← Entry point, run this
+├── database.py      ← SQLite connection setup
+├── models.py        ← Database tables (User, Student, Report)
+├── auth.py          ← Authentication
+├── dashboard.py     ← Dashboard endpoints
+├── report.py        ← ML pipeline endpoints
+├── progress.py      ← Progress & comparison
+├── history.py       ← History management
+├── settings.py      ← Environment config
+├── seed.py          ← Database seeding script
+├── requirements.txt ← Python packages
+├── .env.example     ← Environment variable template
+└── inscriptio.db    ← Auto-created SQLite database
 ```
 
 ---
 
 ## Notes
 
-- Both the frontend server (`port 5500`) and backend API (`port 8000`) must be running at the same time for the app to work.
-- The frontend calls the backend at `http://localhost:8000` — do not change the port unless you also update `const API` in `inscriptio/js/comparison.js` and other JS files.
-- Model checkpoints are not included in the repository. Run the Phase 2 training notebook to generate them before using the backend API.
+- The frontend calls the backend at `http://localhost:8000` — do not change the port unless you also update `const API` in the JS files.
+- Model checkpoints are **not included** in the repository. Run the Phase 2 training notebook to generate `FINAL_production_model.keras` before using the backend API.
+- The SQLite database (`inscriptio.db`) is auto-created on first run.
