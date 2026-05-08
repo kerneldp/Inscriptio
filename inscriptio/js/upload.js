@@ -1,221 +1,183 @@
 /* ============================================================
    inscriptio — upload.js
    Logic for 03_upload_processing.html
-   DEV NOTE:
-     POST /api/preprocess/preview  → { original_b64, binarized_b64, steps }
-     POST /api/analyze             → { reportId, studentId, status }
-     GET  /api/report/:reportId    → poll until status === "ready"
+   POST /api/report/preprocess/preview
+   POST /api/report/analyze
    ============================================================ */
-
 'use strict';
+
+const API = 'http://localhost:8000';
 
 document.addEventListener('DOMContentLoaded', () => {
   const user = Session.require();
   if (!user) return;
-
   populateSidebarUser();
   initSidebarNav();
 
   // ── Element refs ──────────────────────────────────────────
-  const dropzone      = document.getElementById('dropzone');
-  const fileInput     = document.getElementById('file-input');
-  const browseBtn     = document.getElementById('browse-btn');
-  const fileClearBtn  = document.getElementById('file-clear');
-  const fileInfoEl    = document.getElementById('file-info');
-  const fileNameEl    = document.getElementById('file-name');
-  const fileSizeEl    = document.getElementById('file-size');
-
-  const previewOriginal   = document.getElementById('preview-original');
-  const previewBinarized  = document.getElementById('preview-binarized');
-
-  const stepIcons  = document.querySelectorAll('.step-icon');
-  const stepStatus = document.querySelectorAll('.step-status');
-
-  const analyzeBtn  = document.getElementById('analyze-btn');
-  const analyzeTxt  = document.getElementById('analyze-btn-text');
+  const dropzone     = document.getElementById('dropzone');
+  const fileInput    = document.getElementById('file-input');
+  const browseBtn    = document.getElementById('browse-btn');
+  const fileClearBtn = document.getElementById('file-clear');
+  const fileInfoEl   = document.getElementById('file-info');
+  const fileNameEl   = document.getElementById('file-name');
+  const fileSizeEl   = document.getElementById('file-size');
+  const previewOrig  = document.getElementById('preview-original');
+  const previewBin   = document.getElementById('preview-binarized');
+  const stepIcons    = document.querySelectorAll('.step-icon');
+  const stepStatuses = document.querySelectorAll('.step-status');
+  const analyzeBtn   = document.getElementById('analyze-btn');
+  const analyzeTxt   = document.getElementById('analyze-btn-text');
 
   let selectedFile = null;
 
-  // ── Step state helpers ────────────────────────────────────
-  function setStep(index, state) {
-    // state: 'pending' | 'active' | 'done'
-    const icon   = stepIcons[index];
-    const status = stepStatus[index];
+  // ── Populate student dropdown ─────────────────────────────
+  async function loadStudentOptions() {
+    try {
+      const res  = await authFetch(`${API}/api/students`);
+      const data = await res.json();
+      const sel  = document.getElementById('student-select');
+      if (!sel) return;
+      sel.innerHTML = '<option value="">— Select student —</option>';
+      (data.students || []).forEach(s => {
+        const opt       = document.createElement('option');
+        opt.value       = s.id;
+        opt.textContent = `${s.name}${s.class ? ' (' + s.class + ')' : ''}`;
+        sel.appendChild(opt);
+      });
+    } catch { showToast('Could not load student list.', 'error'); }
+  }
+
+  // ── Step helpers ──────────────────────────────────────────
+  function setStep(i, state) {
+    const icon   = stepIcons[i];
+    const status = stepStatuses[i];
     if (!icon || !status) return;
-
     icon.className = `step-icon ${state}`;
-
-    if (state === 'done') {
-      icon.textContent  = '✓';
-      status.textContent = 'Done';
-      status.className  = 'step-status done';
-    } else if (state === 'active') {
-      icon.textContent  = '⟳';
-      status.textContent = 'Processing…';
-      status.className  = 'step-status';
-    } else {
-      icon.textContent  = '○';
-      status.textContent = 'Waiting';
-      status.className  = 'step-status';
-    }
+    if (state === 'done')   { icon.textContent = '✓'; status.textContent = 'Done';        status.className = 'step-status done'; }
+    else if (state === 'active') { icon.textContent = '⟳'; status.textContent = 'Processing…'; status.className = 'step-status'; }
+    else                    { icon.textContent = '○'; status.textContent = 'Waiting';     status.className = 'step-status'; }
   }
 
-  function resetSteps() {
-    setStep(0, 'pending');
-    setStep(1, 'pending');
-    setStep(2, 'pending');
-    setStep(3, 'pending');
-  }
+  function resetSteps() { [0,1,2,3].forEach(i => setStep(i, 'pending')); }
 
   // ── File selection ────────────────────────────────────────
-  function handleFile(file) {
+  async function handleFile(file) {
     if (!file) return;
-
-    const allowed = ['image/png', 'image/jpeg', 'image/jpg'];
-    if (!allowed.includes(file.type)) {
-      showToast('Only PNG or JPG files are supported.', 'error');
-      return;
+    if (!['image/png','image/jpeg','image/jpg'].includes(file.type)) {
+      showToast('Only PNG or JPG files are supported.', 'error'); return;
     }
-
     if (file.size > 10 * 1024 * 1024) {
-      showToast('File must be under 10 MB.', 'error');
-      return;
+      showToast('File must be under 10 MB.', 'error'); return;
     }
 
     selectedFile = file;
-
-    // Show file info
-    fileNameEl.textContent = file.name;
-    fileSizeEl.textContent = (file.size / 1024).toFixed(1) + ' KB';
+    fileNameEl.textContent   = file.name;
+    fileSizeEl.textContent   = (file.size / 1024).toFixed(1) + ' KB';
     fileInfoEl.style.display = 'flex';
-
     dropzone.classList.add('has-file');
     dropzone.querySelector('.dz-title').textContent = 'Image selected';
 
-    // Original preview
+    // Show original preview immediately
     const url = URL.createObjectURL(file);
-    previewOriginal.innerHTML = `<img class="preview-img" src="${url}" alt="Original handwriting">`;
+    previewOrig.innerHTML = `<img class="preview-img" src="${url}" alt="Original">`;
 
-    // Simulate preprocessing steps
-    // DEV NOTE: Replace with POST /api/preprocess/preview multipart request
     resetSteps();
-    setStep(0, 'done'); // Uploaded
+    setStep(0, 'done');   // Uploaded
+    setStep(1, 'active'); // Preprocessing
 
-    setTimeout(() => setStep(1, 'active'), 400);
-    setTimeout(() => {
+    analyzeBtn.disabled = true;
+
+    // Call backend for real Otsu binarization preview
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      const res  = await authFetchForm(`${API}/api/report/preprocess/preview`, form);
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.detail || 'Preview failed');
+
       setStep(1, 'done');
       setStep(2, 'active');
 
-      // Simulate binarized preview with a canvas filter
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = 224; canvas.height = 224;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, 224, 224);
-        const imageData = ctx.getImageData(0, 0, 224, 224);
-        const data = imageData.data;
+      // Show real binarized image from backend
+      previewBin.innerHTML =
+        `<img class="preview-img" src="data:image/png;base64,${data.binarized_b64}" alt="Binarized 224×224">`;
 
-        // Simple grayscale + threshold (Otsu-like mockup)
-        for (let i = 0; i < data.length; i += 4) {
-          const gray = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
-          const val  = gray < 128 ? 0 : 255;
-          data[i] = data[i+1] = data[i+2] = val;
-        }
-        ctx.putImageData(imageData, 0, 0);
-
-        previewBinarized.innerHTML =
-          `<img class="preview-img" src="${canvas.toDataURL()}" alt="Binarized 224×224">`;
-      };
-      img.src = url;
-    }, 1200);
-
-    setTimeout(() => {
       setStep(2, 'done');
       setStep(3, 'active');
-    }, 2200);
 
-    setTimeout(() => {
-      setStep(3, 'done');
-      analyzeBtn.disabled = false;
-    }, 3000);
+      setTimeout(() => {
+        setStep(3, 'done');
+        analyzeBtn.disabled = false;
+      }, 400);
 
-    analyzeBtn.disabled = true; // re-disable until steps complete
+    } catch (err) {
+      showToast(`Preprocessing failed: ${err.message}`, 'error');
+      resetSteps();
+    }
   }
 
   // ── Drag and drop ─────────────────────────────────────────
-  dropzone.addEventListener('dragover', e => {
-    e.preventDefault();
-    dropzone.classList.add('drag-over');
-  });
-
-  dropzone.addEventListener('dragleave', () => {
-    dropzone.classList.remove('drag-over');
-  });
-
+  dropzone.addEventListener('dragover',  e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+  dropzone.addEventListener('dragleave', ()=> dropzone.classList.remove('drag-over'));
   dropzone.addEventListener('drop', e => {
-    e.preventDefault();
-    dropzone.classList.remove('drag-over');
-    const file = e.dataTransfer.files[0];
-    handleFile(file);
+    e.preventDefault(); dropzone.classList.remove('drag-over');
+    handleFile(e.dataTransfer.files[0]);
   });
 
-  // ── Browse button ─────────────────────────────────────────
   browseBtn.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => { if (fileInput.files[0]) handleFile(fileInput.files[0]); });
 
-  fileInput.addEventListener('change', () => {
-    if (fileInput.files[0]) handleFile(fileInput.files[0]);
+  // ── Clear ─────────────────────────────────────────────────
+  fileClearBtn?.addEventListener('click', () => {
+    selectedFile = null; fileInput.value = '';
+    fileInfoEl.style.display = 'none';
+    dropzone.classList.remove('has-file');
+    dropzone.querySelector('.dz-title').textContent = 'Drop the handwriting image here';
+    previewOrig.innerHTML = `<div class="preview-placeholder"><span style="font-size:1.8rem">🖊️</span><div class="preview-placeholder-text">Original image appears here after upload</div></div>`;
+    previewBin.innerHTML  = `<div class="preview-placeholder"><span style="font-size:1.8rem">⬛</span><div class="preview-placeholder-text">Otsu-binarized 224×224 tensor appears here</div></div>`;
+    resetSteps();
+    analyzeBtn.disabled = true;
   });
 
-  // ── Clear file ────────────────────────────────────────────
-  if (fileClearBtn) {
-    fileClearBtn.addEventListener('click', () => {
-      selectedFile = null;
-      fileInput.value = '';
-      fileInfoEl.style.display = 'none';
-      dropzone.classList.remove('has-file');
-      dropzone.querySelector('.dz-title').textContent = 'Drop the handwriting image here';
-      previewOriginal.innerHTML = `
-        <div class="preview-placeholder">
-          <span style="font-size:1.8rem">🖊️</span>
-          <div class="preview-placeholder-text">Original image appears here after upload</div>
-        </div>`;
-      previewBinarized.innerHTML = `
-        <div class="preview-placeholder">
-          <span style="font-size:1.8rem">⬛</span>
-          <div class="preview-placeholder-text">Otsu-binarized 224×224 tensor appears here</div>
-        </div>`;
-      resetSteps();
-      analyzeBtn.disabled = true;
-    });
-  }
+  // ── Analyze ───────────────────────────────────────────────
+  analyzeBtn.disabled = true;
 
-  // ── Analyze button ────────────────────────────────────────
-  analyzeBtn.disabled = true; // disabled until file ready
+  analyzeBtn.addEventListener('click', async () => {
+    if (!selectedFile) { showToast('Please upload an image first.', 'warning'); return; }
 
-  analyzeBtn.addEventListener('click', () => {
-    if (!selectedFile) {
-      showToast('Please upload a handwriting image first.', 'warning');
-      return;
-    }
+    const sel = document.getElementById('student-select');
+    if (!sel?.value) { showToast('Please select a student before analyzing.', 'warning'); return; }
 
-    const student = document.getElementById('student-select').value;
-    if (!student) {
-      showToast('Please select a student before analyzing.', 'warning');
-      return;
-    }
-
-    // DEV NOTE: Replace with POST /api/analyze multipart/form-data
-    // { studentId, sessionDate, classId, imageFile }
-    analyzeBtn.disabled = true;
+    analyzeBtn.disabled    = true;
     analyzeTxt.textContent = 'Analyzing…';
+    showToast('Running HXAI pipeline — this may take 30–60 seconds.', 'info');
 
-    showToast('Running HXAI pipeline — this may take a few seconds.', 'info');
+    try {
+      const form = new FormData();
+      form.append('file',       selectedFile);
+      form.append('student_id', sel.value);
+      form.append('session_date', new Date().toISOString().split('T')[0]);
 
-    // Simulate processing delay then navigate to report
-    setTimeout(() => {
+      const res  = await authFetchForm(`${API}/api/report/analyze`, form);
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.detail || 'Analysis failed');
+
+      // Store report id so report.js can load it
+      sessionStorage.setItem('current_report_id', data.report_id);
+
       showToast('Analysis complete! Redirecting to report…', 'success');
       setTimeout(() => navigate('report'), 800);
-    }, 2500);
+
+    } catch (err) {
+      showToast(`Analysis failed: ${err.message}`, 'error');
+      analyzeBtn.disabled    = false;
+      analyzeTxt.textContent = 'Run Analysis';
+    }
   });
+
+  // ── Init ──────────────────────────────────────────────────
+  loadStudentOptions();
 });

@@ -71,7 +71,7 @@
     <!-- DEV NOTE: Status flag driven by softmax output.
          If confidence >= threshold (e.g. 0.65) → "Potential"; else "Low Potential".
          Threshold configurable via GET /api/config. -->
-    <div class="status-flag potential">🔴 Potential Dysgraphia</div>
+    <div class="status-flag potential" id="status-flag">🔴 Potential Dysgraphia</div>
   </div>
 
   <div class="content report-content">
@@ -80,21 +80,21 @@
     <!-- DEV NOTE: Populate from GET /api/report/:reportId →
          { student, sessionDate, classId, confidence, label, reportId } -->
     <div class="report-meta">
-      <div class="meta-avatar">AA</div>
+      <div class="meta-avatar" id="meta-avatar">AA</div>
       <div class="meta-info">
-        <div class="meta-name">Ana Aquino</div>
+        <div class="meta-name" id="meta-name">Ana Aquino</div>
         <div class="meta-details">
-          <span><em>ID</em> #STU-001</span>
-          <span><em>Class</em> Class A</span>
-          <span><em>Date</em> June 10, 2025</span>
-          <span><em>Report</em> #RPT-0041</span>
+          <span id="meta-student-id"><em>ID</em> —</span>
+          <span id="meta-student-class"><em>Class</em> —</span>
+          <span id="meta-date"><em>Date</em> —</span>
+          <span id="meta-report-id"><em>Report</em> —</span>
         </div>
       </div>
       <div class="confidence-display">
         <div class="conf-label">Softmax Confidence</div>
         <!-- DEV NOTE: Replace with live softmax output from model inference. -->
-        <div class="conf-value high">87.4%</div>
-        <div class="conf-sub">Potential Dysgraphia</div>
+        <div class="conf-value high" id="conf-value">—</div>
+        <div class="conf-sub" id="conf-sub">—</div>
       </div>
     </div>
 
@@ -117,7 +117,7 @@
           <span class="panel-badge badge-original">RAW</span>
         </div>
         <!-- DEV NOTE: Replace with <img> using original_b64 from report API. -->
-        <div class="panel-img">
+        <div class="panel-img" id="panel-original">
           <div class="panel-placeholder-icon">🖊️</div>
           <div class="panel-placeholder-text">Original uploaded<br>handwriting image<br>rendered here</div>
         </div>
@@ -132,7 +132,7 @@
         </div>
         <!-- DEV NOTE: Replace with <img> using shap_b64 from report API.
              Red = dysgraphia feature contribution. Blue = counter-evidence. -->
-        <div class="shap-mockup">
+        <div class="shap-mockup" id="panel-shap">
           <div class="panel-placeholder-icon" style="color:rgba(255,255,255,0.7)">🔥</div>
           <div class="panel-placeholder-text" style="color:rgba(255,255,255,0.6)">SHAP pixel<br>attribution map</div>
           <div class="shap-legend">
@@ -157,7 +157,7 @@
         </div>
         <!-- DEV NOTE: Replace with <img> using gradcam_b64.
              Grad-CAM shows spatial focus regions of the convolutional layers. -->
-        <div class="gradcam-mockup">
+        <div class="gradcam-mockup" id="panel-gradcam">
           <div style="text-align:center;">
             <div class="panel-placeholder-icon" style="color:rgba(255,255,255,0.7)">📍</div>
             <div class="panel-placeholder-text" style="color:rgba(255,255,255,0.7)">Grad-CAM spatial<br>localization overlay</div>
@@ -176,11 +176,11 @@
         <div class="meta-panel-body">
           <div class="meta-row">
             <span class="meta-key">Label</span>
-            <span class="meta-val" style="color:var(--danger)">Potential</span>
+            <span class="meta-val" id="meta-label" style="color:var(--danger)">—</span>
           </div>
           <div class="meta-row">
             <span class="meta-key">Confidence</span>
-            <span class="meta-val">87.4%</span>
+            <span class="meta-val" id="meta-confidence">—</span>
           </div>
           <div class="meta-row">
             <span class="meta-key">Model</span>
@@ -196,13 +196,13 @@
           </div>
           <div class="meta-row">
             <span class="meta-key">Validated</span>
-            <span class="meta-val" style="color:var(--amber)">Pending</span>
+            <span class="meta-val" id="meta-validated" style="color:var(--amber)">—</span>
           </div>
           <div class="conf-bar-wrap">
             <div style="display:flex;justify-content:space-between;
                         font-size:0.65rem;color:var(--ghost);margin-bottom:4px;
                         font-family:'DM Mono',monospace;">
-              <span>0%</span><span>87.4%</span><span>100%</span>
+              <span>0%</span><span id="conf-mid">—</span><span>100%</span>
             </div>
             <div class="conf-bar-track">
               <!-- DEV NOTE: data-value drives the animated width via report.js -->

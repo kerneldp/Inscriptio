@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>inscriptio — Progress Comparison</title>
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/comparison.css">
+</head>
+<body class="comparison-page">
+
+<!-- ═══════════════════════════════════════════════
+     LEFT SIDEBAR
+═══════════════════════════════════════════════ -->
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-mark">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2">
+        <path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+      </svg>
+    </div>
+    <span class="brand-text">inscri<em>ptio</em></span>
+  </div>
+
+  <div class="nav">
+    <span class="nav-section-label">Main</span>
+    <div class="nav-item" data-page="dashboard">
+      <span class="nav-icon">⊞</span> Dashboard
+    </div>
+    <div class="nav-item" data-page="upload">
+      <span class="nav-icon">↑</span> Upload
+    </div>
+    <div class="nav-item" data-page="report">
+      <span class="nav-icon">⚡</span> Reports
+      <span class="nav-badge">3</span>
+    </div>
+
+    <span class="nav-section-label">Tools</span>
+    <div class="nav-item active" data-page="compare">
+      <span class="nav-icon">⟺</span> Compare
+    </div>
+    <div class="nav-item" data-page="archive">
+      <span class="nav-icon">☰</span> Archive
+    </div>
+    <div class="nav-item" data-page="export">
+      <span class="nav-icon">↗</span> Export
+    </div>
+
+    <span class="nav-section-label">System</span>
+    <div class="nav-item" data-page="dashboard">
+      <span class="nav-icon">⚙</span> Settings
+    </div>
+    <div class="nav-item" data-page="dashboard">
+      <span class="nav-icon">?</span> Help
+    </div>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-chip">
+      <!-- DEV NOTE: Populated by comparison.js from session -->
+      <div class="avatar" id="sidebar-avatar">–</div>
+      <div class="user-info">
+        <div class="user-name" id="sidebar-name">Loading…</div>
+        <div class="user-role" id="sidebar-role">–</div>
+      </div>
+      <button id="logout-btn" title="Log out"
+        style="background:none;border:none;cursor:pointer;color:#4a5568;font-size:0.9rem;padding:4px;">
+        ⇥
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════
+     MAIN CONTENT
+═══════════════════════════════════════════════ -->
+<div class="main">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <h1 class="topbar-title">Progress Comparison</h1>
+    <div style="margin-left: auto; font-size: 0.8rem; color: var(--ghost);">
+      Analyzing trends and improvements over time
+    </div>
+  </div>
+
+  <!-- Page content -->
+  <div class="content">
+
+    <!-- ── Student Selection ────────────────────────────────────── -->
+    <div class="section-card">
+      <div class="section-header">
+        <h2 class="section-title">Select Student & Dates</h2>
+      </div>
+      <div class="selection-panel">
+        <div class="field-group">
+          <label class="field-label">Student</label>
+          <div class="select-wrap">
+            <select class="field-select" id="student-select" placeholder="Choose a student">
+              <option value="">— Select a student —</option>
+              <!-- DEV NOTE: Populate this with GET /api/students -->
+              <!-- PLACEHOLDER: Backend developers should fetch and populate this list -->
+              <option value="STU-001">Ana Aquino (#STU-001)</option>
+              <option value="STU-002">Ben Lim (#STU-002)</option>
+              <option value="STU-003">Cara Maño (#STU-003)</option>
+              <option value="STU-004">Diego Santos (#STU-004)</option>
+              <option value="STU-005">Elena Villanueva (#STU-005)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Report Date 1 (Baseline)</label>
+          <div class="select-wrap">
+            <select class="field-select" id="date-select-1" disabled>
+              <option value="">— Select a date —</option>
+              <!-- DEV NOTE: Populate this with GET /api/reports?studentId={studentId} -->
+              <!-- PLACEHOLDER: Dates will be fetched based on student selection -->
+            </select>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Report Date 2 (Current)</label>
+          <div class="select-wrap">
+            <select class="field-select" id="date-select-2" disabled>
+              <option value="">— Select a date —</option>
+              <!-- DEV NOTE: Populate this with GET /api/reports?studentId={studentId} -->
+              <!-- PLACEHOLDER: Dates will be fetched based on student selection -->
+            </select>
+          </div>
+        </div>
+
+        <button class="action-button primary" id="load-comparison-btn" disabled>
+          Load Comparison
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Dual-Panel Report Comparison ────────────────────────────────────── -->
+    <div class="comparison-section" id="comparison-container" style="display: none;">
+      <h3 class="section-subtitle">Dual-Panel Report Comparison</h3>
+      
+      <div class="dual-panel">
+        <!-- Left Panel -->
+        <div class="comparison-panel baseline">
+          <div class="panel-header">
+            <div class="panel-title">Baseline Report</div>
+            <div class="panel-date" id="panel-1-date">—</div>
+          </div>
+          <div class="panel-content" id="panel-1-content">
+            <!-- DEV NOTE: Fetch from GET /api/reports/{reportId} -->
+            <!-- PLACEHOLDER: Populate with student data from selected baseline report -->
+            <!-- Display fields: confidence score, key features, dysgraphia indicators -->
+            <div class="panel-placeholder">
+              <p>Confidence Score: <span class="placeholder-value">87.4%</span></p>
+              <p>Key Features Detected:</p>
+              <ul style="margin-left: 20px; margin-top: 8px;">
+                <li>Feature 1</li>
+                <li>Feature 2</li>
+                <li>Feature 3</li>
+              </ul>
+              <p style="margin-top: 12px;">Dysgraphia Risk Level: <span class="risk-badge high">High</span></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Panel -->
+        <div class="comparison-panel current">
+          <div class="panel-header">
+            <div class="panel-title">Current Report</div>
+            <div class="panel-date" id="panel-2-date">—</div>
+          </div>
+          <div class="panel-content" id="panel-2-content">
+            <!-- DEV NOTE: Fetch from GET /api/reports/{reportId} -->
+            <!-- PLACEHOLDER: Populate with student data from selected current report -->
+            <!-- Display fields: confidence score, key features, dysgraphia indicators -->
+            <div class="panel-placeholder">
+              <p>Confidence Score: <span class="placeholder-value">72.1%</span></p>
+              <p>Key Features Detected:</p>
+              <ul style="margin-left: 20px; margin-top: 8px;">
+                <li>Feature 1 (Improved)</li>
+                <li>Feature 2</li>
+              </ul>
+              <p style="margin-top: 12px;">Dysgraphia Risk Level: <span class="risk-badge medium">Medium</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Improvement Summary -->
+      <div class="improvement-summary">
+        <div class="summary-item positive">
+          <div class="summary-icon">↓</div>
+          <div class="summary-text">
+            <div class="summary-label">Confidence Improvement</div>
+            <div class="summary-value">-15.3%</div>
+            <div class="summary-desc">Lower confidence = Improved predictions</div>
+          </div>
+        </div>
+        <div class="summary-item neutral">
+          <div class="summary-icon">→</div>
+          <div class="summary-text">
+            <div class="summary-label">Features Reduced</div>
+            <div class="summary-value">1 of 3</div>
+            <div class="summary-desc">One identified dysgraphia feature no longer detected</div>
+          </div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-icon">⧖</div>
+          <div class="summary-text">
+            <div class="summary-label">Analysis Period</div>
+            <div class="summary-value">45 days</div>
+            <div class="summary-desc">Time between baseline and current assessment</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Trend Graph ────────────────────────────────────── -->
+    <div class="comparison-section" id="trend-section" style="display: none;">
+      <h3 class="section-subtitle">Confidence Score Trend</h3>
+      
+      <div class="chart-container">
+        <div class="chart-placeholder">
+          <!-- DEV NOTE: 
+               IMPLEMENTATION NOTE FOR BACKEND/FRONTEND DEVELOPERS:
+               1. Fetch historical confidence scores: GET /api/reports/{studentId}/history
+               2. Chart library to use: Chart.js or similar (not included - add to dependencies)
+               3. Data format expected:
+                  {
+                    dates: ['2025-04-01', '2025-04-15', '2025-05-01', '2025-05-15'],
+                    scores: [87.4, 84.2, 76.5, 72.1]
+                  }
+               4. Configuration:
+                  - Type: Line Chart
+                  - Title: "Softmax Confidence Scores Over Time"
+                  - Y-axis: Confidence Score (0-100)
+                  - X-axis: Date
+                  - Trend: Descending trend indicates improvement (lower confidence = better predictions)
+                  - Color: Use var(--teal) for the line
+          -->
+          <svg viewBox="0 0 600 300" style="width: 100%; max-width: 100%;">
+            <!-- Placeholder grid -->
+            <defs>
+              <pattern id="grid" width="60" height="30" patternUnits="userSpaceOnUse">
+                <path d="M 60 0 L 0 0 0 30" fill="none" stroke="#ddd8d0" stroke-width="0.5"/>
+              </pattern>
+            </defs>
+            <rect width="600" height="300" fill="url(#grid)" />
+            <!-- Placeholder line -->
+            <polyline points="40,80 150,100 260,140 370,160 480,180" stroke="var(--teal)" stroke-width="3" fill="none"/>
+            <!-- Placeholder text -->
+            <text x="300" y="260" text-anchor="middle" font-family="Figtree" font-size="12" fill="#8a8f9a">
+              [Trend Graph - Will be populated with historical confidence scores]
+            </text>
+          </svg>
+        </div>
+        <div class="chart-legend">
+          <div class="legend-item">
+            <div class="legend-color" style="background: var(--teal);"></div>
+            <span>Confidence Score</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background: var(--danger);"></div>
+            <span>Flagged Threshold (80%)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Heatmap Comparison ────────────────────────────────────── -->
+    <div class="comparison-section" id="heatmap-section" style="display: none;">
+      <h3 class="section-subtitle">SHAP Feature Heatmap Comparison</h3>
+      
+      <div class="heatmap-container">
+        <div class="heatmap-placeholder">
+          <!-- DEV NOTE:
+               IMPLEMENTATION NOTE FOR BACKEND/FRONTEND DEVELOPERS:
+               1. SHAP values: GET /api/reports/{reportId}/shap-values
+               2. Heatmap library: Plotly.js or similar (not included - add to dependencies)
+               3. Data structure expected:
+                  {
+                    features: ['stroke_direction', 'loop_closure', 'slant', 'pressure', 'spacing'],
+                    baseline_values: [0.85, 0.72, 0.91, 0.68, 0.77],
+                    current_values: [0.45, 0.72, 0.85, 0.65, 0.81]
+                  }
+               4. Configuration:
+                  - Type: 2D Heatmap or Comparative Bar Chart
+                  - Color scale: Red zones (high SHAP values) = dysgraphia indicators
+                  - Interpretation: Shrinking red zones = improvement
+                  - Baseline vs Current side-by-side comparison
+          -->
+          <div class="heatmap-placeholder">
+            <div class="heatmap-grid">
+              <!-- Header -->
+              <div class="heatmap-header">Feature</div>
+              <div class="heatmap-header">Baseline</div>
+              <div class="heatmap-header">Current</div>
+              <div class="heatmap-header">Improvement</div>
+
+              <!-- Row 1: Stroke Direction -->
+              <div class="heatmap-label">Stroke Direction</div>
+              <div class="heatmap-cell" style="background: rgba(192, 57, 43, 0.85); color: white;" title="0.85 - High Risk">
+                <span class="heatmap-cell-value">0.85</span>
+              </div>
+              <div class="heatmap-cell" style="background: rgba(14, 159, 160, 0.7); color: white;" title="0.45 - Low Risk">
+                <span class="heatmap-cell-value">0.45</span>
+              </div>
+              <div class="heatmap-improvement positive">↓ 0.40</div>
+
+              <!-- Row 2: Loop Closure -->
+              <div class="heatmap-label">Loop Closure</div>
+              <div class="heatmap-cell" style="background: rgba(232, 160, 32, 0.65); color: white;" title="0.72 - Medium Risk">
+                <span class="heatmap-cell-value">0.72</span>
+              </div>
+              <div class="heatmap-cell" style="background: rgba(232, 160, 32, 0.65); color: white;" title="0.72 - Medium Risk">
+                <span class="heatmap-cell-value">0.72</span>
+              </div>
+              <div class="heatmap-improvement neutral">→ 0.00</div>
+
+              <!-- Row 3: Slant Variability -->
+              <div class="heatmap-label">Slant Variability</div>
+              <div class="heatmap-cell" style="background: rgba(192, 57, 43, 0.85); color: white;" title="0.91 - High Risk">
+                <span class="heatmap-cell-value">0.91</span>
+              </div>
+              <div class="heatmap-cell" style="background: rgba(232, 160, 32, 0.6); color: white;" title="0.85 - Medium Risk">
+                <span class="heatmap-cell-value">0.85</span>
+              </div>
+              <div class="heatmap-improvement positive">↓ 0.06</div>
+
+              <!-- Row 4: Pressure Inconsistency -->
+              <div class="heatmap-label">Pressure Inconsistency</div>
+              <div class="heatmap-cell" style="background: rgba(232, 160, 32, 0.6); color: white;" title="0.68 - Medium Risk">
+                <span class="heatmap-cell-value">0.68</span>
+              </div>
+              <div class="heatmap-cell" style="background: rgba(232, 160, 32, 0.6); color: white;" title="0.65 - Medium Risk">
+                <span class="heatmap-cell-value">0.65</span>
+              </div>
+              <div class="heatmap-improvement positive">↓ 0.03</div>
+
+              <!-- Row 5: Letter Spacing -->
+              <div class="heatmap-label">Letter Spacing</div>
+              <div class="heatmap-cell" style="background: rgba(232, 160, 32, 0.65); color: white;" title="0.77 - Medium Risk">
+                <span class="heatmap-cell-value">0.77</span>
+              </div>
+              <div class="heatmap-cell" style="background: rgba(232, 160, 32, 0.67); color: white;" title="0.81 - Medium Risk">
+                <span class="heatmap-cell-value">0.81</span>
+              </div>
+              <div class="heatmap-improvement negative">↑ 0.04</div>
+            </div>
+
+            <!-- Color Scale Legend -->
+            <div class="heatmap-legend">
+              <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+                <div style="font-weight: 600; font-size: 0.85rem; color: var(--ink);">Color Scale:</div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <div style="width: 30px; height: 20px; background: rgba(14, 159, 160, 0.7); border-radius: 4px;"></div>
+                  <span style="font-size: 0.8rem; color: var(--ghost);">Low (0.0-0.3)</span>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <div style="width: 30px; height: 20px; background: rgba(232, 160, 32, 0.65); border-radius: 4px;"></div>
+                  <span style="font-size: 0.8rem; color: var(--ghost);">Medium (0.3-0.7)</span>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <div style="width: 30px; height: 20px; background: rgba(192, 57, 43, 0.85); border-radius: 4px;"></div>
+                  <span style="font-size: 0.8rem; color: var(--ghost);">High (0.7-1.0)</span>
+                </div>
+              </div>
+              <p style="font-size: 0.8rem; color: var(--ghost); margin-top: 12px; margin-bottom: 0;">
+                Shrinking bars and shifting from red → amber → teal indicates improvement in dysgraphia indicators.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Empty State (Before selection) ────────────────────────────────────── -->
+    <div class="empty-state" id="empty-state">
+      <div style="text-align: center; padding: 60px 20px; color: var(--ghost);">
+        <div style="font-size: 3rem; margin-bottom: 16px;">⟺</div>
+        <p style="font-family: 'DM Serif Display', serif; font-size: 1.1rem; color: var(--ink); margin-bottom: 8px;">
+          Ready to Compare
+        </p>
+        <p style="font-size: 0.9rem; margin-bottom: 4px;">
+          Select a student and two report dates above to begin comparison
+        </p>
+        <p style="font-size: 0.85rem; color: var(--rule);">
+          Track progress and identify improvements in dysgraphia indicators
+        </p>
+      </div>
+    </div>
+
+  </div><!-- /.content -->
+</div><!-- /.main -->
+
+<script src="../js/app.js"></script>
+<script src="../js/comparison.js"></script>
+</body>
+</html>
