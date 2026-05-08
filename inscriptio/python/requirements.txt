@@ -1,4 +1,4 @@
-# run: pip install --prefer-binary -r requirements.txt
+# run: pip install --prefer-binary -r inscriptio/python/requirements.txt
 
 
 # ── Backend API ───────────────────────────────────────────────────────────────
