@@ -1,0 +1,466 @@
+/* ============================================================
+   inscriptio — comparison.css
+   Styles for 05_progress_comparison.html (Progress & Comparison View)
+   ============================================================ */
+
+body.comparison-page {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ── Selection Panel ────────────────────────────────────── */
+.selection-panel {
+  padding: 24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr auto;
+  gap: 20px;
+  align-items: end;
+  background: #fafaf8;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.selection-dates {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+/* ── Action Button ────────────────────────────────────── */
+.action-button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Figtree', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  margin-bottom: 19px;
+}
+
+.action-button.primary {
+  background: var(--teal);
+  color: #fff;
+}
+
+.action-button.primary:hover:not(:disabled) {
+  background: var(--teal-dim);
+  box-shadow: 0 4px 12px rgba(14, 159, 160, 0.3);
+}
+
+.action-button:disabled {
+  background: var(--mist);
+  color: var(--ghost);
+  cursor: not-allowed;
+}
+
+/* ── Comparison Section ────────────────────────────────────── */
+.comparison-section {
+  margin-top: 36px;
+}
+
+.section-subtitle {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1rem;
+  color: var(--ink);
+  margin-bottom: 20px;
+  letter-spacing: -0.01em;
+}
+
+/* ── Dual-Panel Comparison ────────────────────────────────────── */
+.dual-panel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.comparison-panel {
+  background: var(--card);
+  border: 1.5px solid var(--rule);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.panel-header {
+  background: #fafaf8;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.panel-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ghost);
+  font-weight: 600;
+}
+
+.panel-date {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.82rem;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.panel-content {
+  padding: 20px;
+}
+
+.panel-placeholder {
+  font-size: 0.85rem;
+  color: var(--ink);
+  line-height: 1.6;
+}
+
+.panel-placeholder p {
+  margin-bottom: 12px;
+}
+
+.placeholder-value {
+  font-family: 'DM Mono', monospace;
+  font-weight: 600;
+  color: var(--teal);
+}
+
+/* ── Risk Badge ────────────────────────────────────── */
+.risk-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: 'DM Mono', monospace;
+  margin-left: 8px;
+}
+
+.risk-badge.high {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.risk-badge.medium {
+  background: var(--amber-bg);
+  color: var(--amber);
+}
+
+.risk-badge.low {
+  background: var(--teal-bg);
+  color: var(--teal);
+}
+
+/* ── Improvement Summary ────────────────────────────────────── */
+.improvement-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.summary-item {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--rule);
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.summary-item.positive {
+  border-left-color: var(--teal);
+  background: rgba(14, 159, 160, 0.04);
+}
+
+.summary-item.neutral {
+  border-left-color: var(--amber);
+  background: rgba(232, 160, 32, 0.04);
+}
+
+.summary-icon {
+  font-size: 1.8rem;
+  width: 50px;
+  height: 50px;
+  background: var(--mist);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.summary-item.positive .summary-icon {
+  background: var(--teal-bg);
+  color: var(--teal);
+}
+
+.summary-item.neutral .summary-icon {
+  background: var(--amber-bg);
+  color: var(--amber);
+}
+
+.summary-text {
+  flex: 1;
+}
+
+.summary-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ghost);
+  margin-bottom: 6px;
+}
+
+.summary-value {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.3rem;
+  color: var(--ink);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.summary-desc {
+  font-size: 0.75rem;
+  color: var(--ghost);
+  line-height: 1.4;
+}
+
+/* ── Chart Container ────────────────────────────────────── */
+.chart-container {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.chart-placeholder {
+  width: 100%;
+  background: #fafaf8;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 16px;
+  min-height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.chart-legend {
+  display: flex;
+  gap: 32px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--ink);
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+/* ── Heatmap Container ────────────────────────────────────── */
+.heatmap-container {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  overflow-x: auto;
+}
+
+.heatmap-placeholder {
+  width: 100%;
+}
+
+/* ── Heatmap Grid ────────────────────────────────────── */
+.heatmap-grid {
+  display: grid;
+  grid-template-columns: 200px 100px 100px 100px;
+  gap: 12px;
+  margin-bottom: 24px;
+  background: #fafaf8;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.heatmap-header {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ghost);
+  font-weight: 600;
+  padding: 12px;
+  text-align: center;
+  border-bottom: 2px solid var(--rule);
+}
+
+.heatmap-header:first-child {
+  text-align: left;
+  border-left: 2px solid var(--rule);
+  border-radius: 6px 0 0 6px;
+}
+
+.heatmap-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--ink);
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  background: white;
+  border-radius: 6px;
+}
+
+.heatmap-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 10px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  position: relative;
+  min-height: 50px;
+}
+
+.heatmap-cell:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  filter: brightness(1.1);
+}
+
+.heatmap-cell-value {
+  position: relative;
+  z-index: 2;
+}
+
+.heatmap-improvement {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 10px;
+  border-radius: 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: white;
+}
+
+.heatmap-improvement.positive {
+  color: var(--teal);
+  background: rgba(14, 159, 160, 0.1);
+}
+
+.heatmap-improvement.neutral {
+  color: var(--amber);
+  background: rgba(232, 160, 32, 0.1);
+}
+
+.heatmap-improvement.negative {
+  color: var(--danger);
+  background: rgba(192, 57, 43, 0.1);
+}
+
+/* ── Heatmap Legend ────────────────────────────────────── */
+.heatmap-legend {
+  background: var(--teal-bg);
+  border-left: 4px solid var(--teal);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+/* ── Change Badge ────────────────────────────────────── */
+.change-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: 'DM Mono', monospace;
+}
+
+.change-badge.positive {
+  background: rgba(14, 159, 160, 0.15);
+  color: var(--teal);
+}
+
+.change-badge.neutral {
+  background: rgba(232, 160, 32, 0.15);
+  color: var(--amber);
+}
+
+.change-badge.negative {
+  background: rgba(192, 57, 43, 0.15);
+  color: var(--danger);
+}
+
+/* ── Empty State ────────────────────────────────────── */
+.empty-state {
+  background: var(--card);
+  border: 1px dashed var(--rule);
+  border-radius: 12px;
+  margin-top: 36px;
+}
+
+/* ── Responsive ────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .selection-panel {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .selection-dates {
+    grid-template-columns: 1fr;
+  }
+
+  .dual-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .improvement-summary {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .heatmap-table {
+    font-size: 0.8rem;
+  }
+
+  .heatmap-table th,
+  .heatmap-table td {
+    padding: 8px;
+  }
+
+  .summary-item {
+    gap: 12px;
+  }
+}
