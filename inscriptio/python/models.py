@@ -39,9 +39,14 @@ class Report(Base):
     uploaded_by = Column(Integer, ForeignKey("users.id"),    nullable=False)
 
     # Image file paths (set by the ML pipeline — pages 3 & 4)
-    original_img = Column(String, nullable=True)
-    shap_img     = Column(String, nullable=True)
-    gradcam_img  = Column(String, nullable=True)
+    original_img       = Column(String, nullable=True)
+    shap_img           = Column(String, nullable=True)
+    gradcam_img        = Column(String, nullable=True)
+    severe_anomaly_img = Column(String, nullable=True)   
+
+    # Phase 04 outputs
+    patch_scores = Column(Text, nullable=True)   
+    findings     = Column(Text, nullable=True)  
 
     # ML results
     softmax_score = Column(Float,  nullable=True)
