@@ -31,6 +31,7 @@ from pathlib import Path
 from database import get_db
 from models import Report, Student
 from auth import get_current_user
+from typing import Optional
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 logging.basicConfig(level=logging.INFO)
@@ -161,28 +162,38 @@ def make_gradcam_heatmap(img_array: np.ndarray, model) -> np.ndarray:
 def make_severe_anomaly_panel(binary_img: np.ndarray, full_shap: np.ndarray, mask: np.ndarray) -> np.ndarray:
     """
     Phase 04 — Severe Anomaly Focus panel.
-    Highlights only the top 10% most extreme SHAP attribution zones in red.
-    These are the pixels the model is MOST alarmed by.
+    Shows only the top 5% most extreme SHAP attribution zones.
+    Uses morphological cleanup + contour outlines for a clean, clinical look.
     """
+    # Convert to 3-channel grayscale base (keep text readable)
     img_rgb = cv2.cvtColor(binary_img, cv2.COLOR_GRAY2BGR)
+ 
     if not np.any(mask):
         return img_rgb
-
-    threshold = np.percentile(np.abs(full_shap[mask]), 90)
-    severe_mask = np.abs(full_shap) >= threshold
-
-    overlay = img_rgb.copy()
-    overlay[severe_mask] = [0, 0, 220]  # BGR red for severe anomaly
-
-    result = cv2.addWeighted(img_rgb, 0.45, overlay, 0.55, 0)
-
-    # Draw a thin red contour border around severe zones for clarity
-    severe_u8 = severe_mask.astype(np.uint8) * 255
-    contours, _ = cv2.findContours(severe_u8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    cv2.drawContours(result, contours, -1, (0, 0, 180), 1)
-
+ 
+    # Tighter threshold — top 5% only (was 90th percentile before)
+    threshold = np.percentile(np.abs(full_shap[mask]), 95)
+    severe_mask = (np.abs(full_shap) >= threshold).astype(np.uint8)
+ 
+    # Morphological cleanup: remove tiny noise blobs, keep only meaningful zones
+    kernel_close = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9))
+    kernel_open  = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+    severe_mask  = cv2.morphologyEx(severe_mask, cv2.MORPH_CLOSE, kernel_close)
+    severe_mask  = cv2.morphologyEx(severe_mask, cv2.MORPH_OPEN,  kernel_open)
+ 
+    # Very light red fill so text underneath remains legible
+    fill_overlay        = img_rgb.copy()
+    fill_overlay[severe_mask > 0] = [180, 60, 60]   # dark red in BGR
+    result = cv2.addWeighted(img_rgb, 0.72, fill_overlay, 0.28, 0)
+ 
+    # Crisp red contour outlines — this is the dominant visual cue
+    contours, _ = cv2.findContours(severe_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    # Filter out tiny contours (area < 100px) to avoid noise dots
+    significant = [c for c in contours if cv2.contourArea(c) >= 100]
+    cv2.drawContours(result, significant, -1, (0, 0, 200), 2)
+ 
     return result
-
+ 
 
 def generate_findings(binary_img: np.ndarray, full_shap: np.ndarray, mask: np.ndarray, label: str) -> str:
     """
@@ -219,8 +230,8 @@ def generate_findings(binary_img: np.ndarray, full_shap: np.ndarray, mask: np.nd
         dominant = "whitespace"
         findings = (
             "The predictive anomalies are heavily localized in the whitespace between characters. "
-            "Deuel (1995) defines Spatial Dysgraphia as producing illegible writing — whether spontaneous "
-            "or copied — due to a fundamental deficit in spatial perception, which manifests directly as "
+            "Deuel (1995) defines Spatial Dysgraphia as producing illegible writing - whether spontaneous "
+            "or copied - due to a fundamental deficit in spatial perception, which manifests directly as "
             "abnormal letter spacing and erratic kerning. Chung et al. (2020) further specify that in spatial "
             "dysgraphia, oral spelling and fine-motor tapping speed are preserved, indicating that the spacing "
             "irregularities detected in this zone are perceptual-spatial in origin rather than purely motoric. "
@@ -237,7 +248,7 @@ def generate_findings(binary_img: np.ndarray, full_shap: np.ndarray, mask: np.nd
             "disruptions in graphomotor execution. Kushki et al. (2011) identify that children with dysgraphia "
             "exhibit significantly increased pen pressure variability and irregular stroke formation, reflecting "
             "underlying motor planning deficits. Overvelde and Hulstijn (2011) further demonstrate that letter "
-            "formation errors — particularly in stroke direction and sequencing — are reliable markers of "
+            "formation errors - particularly in stroke direction and sequencing - are reliable markers of "
             "Dysfluent Dysgraphia. These motor-level irregularities, concentrated in the ink stroke zones, are "
             "consistent with impaired kinesthetic feedback during handwriting production, as described under "
             "Specific Learning Disorder criteria (APA, 2013). Döhla and Heim (2016) note that such "
@@ -397,8 +408,8 @@ class NotesRequest(BaseModel):
     notes: str
 
 class SaveRequest(BaseModel):
-    decision: str = None
-    notes: str    = None
+    decision: Optional[str] = None
+    notes: Optional[str] = None
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -635,7 +646,7 @@ def download_report_pdf(
 
     student = db.query(Student).filter(Student.id == r.student_id).first()
     student_name  = student.name          if student else "Unknown"
-    student_class = student.student_class if student else "—"
+    student_class = student.student_class if student else "-"
 
     try:
         patch_breakdown = json.loads(r.patch_scores) if r.patch_scores else []
@@ -644,7 +655,7 @@ def download_report_pdf(
 
     pct = round((r.softmax_score or 0) * 100, 1)
     verdict_text = {"verify": "Verified", "disagree": "Disagreed"}.get(r.verdict or "", "Pending")
-    created = r.created_at.strftime("%B %d, %Y") if r.created_at else "—"
+    created = r.created_at.strftime("%B %d, %Y") if r.created_at else "-"
 
     # Build PDF
     pdf = FPDF()
@@ -654,7 +665,7 @@ def download_report_pdf(
     # Header
     pdf.set_font("Helvetica", "B", 18)
     pdf.set_text_color(15, 23, 42)
-    pdf.cell(0, 10, "Inscriptio — XAI Dysgraphia Screening Report", ln=True)
+    pdf.cell(0, 10, "Inscriptio - XAI Dysgraphia Screening Report", ln=True)
     pdf.set_font("Helvetica", "", 9)
     pdf.set_text_color(100, 116, 139)
     pdf.cell(0, 6, f"Report #RPT-{str(report_id).zfill(4)}  |  Generated: {created}", ln=True)
@@ -684,7 +695,7 @@ def download_report_pdf(
     label_color = (220, 38, 38) if (r.label or "").lower() == "potential" else (5, 150, 105)
     pdf.set_text_color(*label_color)
     pdf.set_font("Helvetica", "B", 14)
-    pdf.cell(0, 8, f"{r.label or '—'}  ({pct}% System Confidence)", ln=True)
+    pdf.cell(0, 8, f"{r.label or '-'}  ({pct}% System Confidence)", ln=True)
     pdf.set_font("Helvetica", "", 10)
     pdf.set_text_color(51, 65, 85)
     pdf.cell(0, 6, f"Clinician Verdict: {verdict_text}", ln=True)
@@ -694,7 +705,7 @@ def download_report_pdf(
     if patch_breakdown:
         pdf.set_font("Helvetica", "B", 11)
         pdf.set_text_color(15, 23, 42)
-        pdf.cell(0, 7, "Probability Averaging — Patch-Level Breakdown", ln=True)
+        pdf.cell(0, 7, "Probability Averaging - Patch-Level Breakdown", ln=True)
         pdf.set_font("Helvetica", "", 9)
         pdf.set_text_color(100, 116, 139)
 
@@ -738,31 +749,52 @@ def download_report_pdf(
             image_paths.append((img_path, title))
 
     if image_paths:
+        pdf.add_page()
         pdf.set_font("Helvetica", "B", 11)
         pdf.set_text_color(15, 23, 42)
         pdf.cell(0, 7, "XAI 4-Panel Analysis", ln=True)
-        pdf.ln(2)
+        pdf.ln(4)
 
-        # 2×2 grid of images
-        img_w, img_h = 90, 70
-        x_positions  = [10, 108]
-        for i, (img_path, title) in enumerate(image_paths):
-            x = x_positions[i % 2]
-            if i % 2 == 0 and i > 0:
-                pdf.ln(img_h + 12)
-            y = pdf.get_y()
-            try:
-                pdf.image(img_path, x=x, y=y, w=img_w, h=img_h)
-                pdf.set_xy(x, y + img_h + 1)
-                pdf.set_font("Helvetica", "I", 7)
-                pdf.set_text_color(100, 116, 139)
-                pdf.cell(img_w, 4, title)
-                if i % 2 == 1:
-                    pdf.ln(6)
-                    pdf.set_xy(10, y + img_h + 8)
-            except Exception as e:
-                log.warning(f"Could not embed image {img_path}: {e}")
-        pdf.ln(img_h + 15)
+        img_w = 90
+        img_h = 70
+
+        if len(image_paths) > 0:
+            y_start = pdf.get_y()
+            
+            pdf.image(image_paths[0][0], x=10, y=y_start, w=img_w, h=img_h)
+            if len(image_paths) > 1:
+                pdf.image(image_paths[1][0], x=108, y=y_start, w=img_w, h=img_h)
+
+            pdf.set_y(y_start + img_h + 2)
+
+            pdf.set_font("Helvetica", "I", 7)
+            pdf.set_text_color(100, 116, 139)
+            pdf.set_x(10)
+            pdf.cell(90, 4, image_paths[0][1])
+            if len(image_paths) > 1:
+                pdf.set_x(108)
+                pdf.cell(90, 4, image_paths[1][1])
+
+            pdf.ln(12) 
+
+        if len(image_paths) > 2:
+            y_start = pdf.get_y()
+  
+            pdf.image(image_paths[2][0], x=10, y=y_start, w=img_w, h=img_h)
+            if len(image_paths) > 3:
+                pdf.image(image_paths[3][0], x=108, y=y_start, w=img_w, h=img_h)
+
+            pdf.set_y(y_start + img_h + 2)
+ 
+            pdf.set_font("Helvetica", "I", 7)
+            pdf.set_text_color(100, 116, 139)
+            pdf.set_x(10)
+            pdf.cell(90, 4, image_paths[2][1])
+            if len(image_paths) > 3:
+                pdf.set_x(108)
+                pdf.cell(90, 4, image_paths[3][1])
+ 
+            pdf.ln(12)
 
     # Evidence-Based Findings
     if r.findings:
@@ -793,7 +825,7 @@ def download_report_pdf(
     pdf.set_font("Helvetica", "", 8)
     pdf.cell(0, 5, f"Report ID: #RPT-{str(report_id).zfill(4)}", ln=True)
     pdf.cell(0, 5, f"Model: MobileNetV3-Small + SHAP DeepExplainer + Grad-CAM", ln=True)
-    pdf.cell(0, 5, f"Input Size: 224×224  |  Preprocessing: Otsu Binarization", ln=True)
+    pdf.cell(0, 5, f"Input Size: 224x224  |  Preprocessing: Otsu Binarization", ln=True)
     pdf.cell(0, 5, f"Generated by Inscriptio v1.0.0 (AIKONIC Research Team)", ln=True)
 
     # Output as bytes
