@@ -181,59 +181,45 @@
     </div><!-- /.panel-grid -->
 
     <!-- ── Metadata grid ────────────────────────────────── -->
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">
+    <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 20px; padding: 12px 20px; background: #fff; border: 1px solid var(--rule); border-radius: 12px; margin-bottom: 16px;">
 
-      <!-- Label card -->
-      <div style="background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:14px 16px;">
-        <div style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ghost);
-                    text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Label</div>
-        <div id="meta-label" style="font-family:'DM Serif Display',serif;font-size:1rem;
-                                    font-weight:600;color:var(--danger);">—</div>
+      <div style="display: flex; gap: 6px; align-items: baseline;">
+        <span style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--ghost);">Label</span>
+        <span id="meta-label" style="font-family:'DM Serif Display',serif;font-size:0.9rem;font-weight:600;color:var(--danger);">—</span>
       </div>
 
-      <!-- Confidence card -->
-      <div style="background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:14px 16px;">
-        <div style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ghost);
-                    text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Confidence</div>
-        <div id="meta-confidence" style="font-family:'DM Serif Display',serif;font-size:1rem;
-                                         font-weight:600;color:var(--ink);">—</div>
-        <div class="conf-bar-track" style="margin-top:8px;">
-          <div class="conf-bar-fill" id="conf-bar-fill" data-value="0"></div>
+      <div style="display: flex; gap: 6px; align-items: baseline;">
+        <span style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--ghost);">Confidence</span>
+        <span id="meta-confidence" style="font-family:'DM Serif Display',serif;font-size:0.9rem;font-weight:600;color:var(--ink);">—</span>
+      </div>
+
+      <div style="display: flex; gap: 6px; align-items: baseline;">
+        <span style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--ghost);">Model</span>
+        <span style="font-family:'DM Mono',monospace;font-size:0.8rem;color:var(--ink);font-weight:500;">MobileNetV3</span>
+      </div>
+
+      <div style="display: flex; gap: 6px; align-items: baseline;">
+        <span style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--ghost);">Input</span>
+        <span style="font-family:'DM Mono',monospace;font-size:0.8rem;color:var(--ink);font-weight:500;">224×224</span>
+      </div>
+
+      <div style="display: flex; gap: 6px; align-items: baseline;">
+        <span style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--ghost);">Pre-process</span>
+        <span style="font-family:'DM Mono',monospace;font-size:0.8rem;color:var(--ink);font-weight:500;">Otsu</span>
+      </div>
+
+      <div style="display: flex; gap: 6px; align-items: baseline;">
+        <span style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--ghost);">Validated</span>
+        <span id="meta-validated" style="font-family:'DM Serif Display',serif;font-size:0.9rem;font-weight:600;color:var(--amber);">—</span>
+      </div>
+
+      <div style="flex: 1; min-width: 200px; display: flex; align-items: center; gap: 12px; margin-left: auto;">
+        <span style="font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--ghost);">0%</span>
+        <div class="conf-bar-track" style="flex: 1; height: 8px; background: var(--mist); border-radius: 4px; overflow: hidden;">
+          <div class="conf-bar-fill" id="conf-bar-fill" style="height: 100%; width: 0%; background: var(--danger); transition: width 0.6s ease;"></div>
         </div>
-        <div style="display:flex;justify-content:space-between;
-                    font-size:0.6rem;color:var(--ghost);margin-top:4px;
-                    font-family:'DM Mono',monospace;">
-          <span>0%</span><span id="conf-mid">—</span><span>100%</span>
-        </div>
-      </div>
-
-      <!-- Verdict card -->
-      <div style="background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:14px 16px;">
-        <div style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ghost);
-                    text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Validated</div>
-        <div id="meta-validated" style="font-family:'DM Serif Display',serif;font-size:1rem;
-                                        font-weight:600;color:var(--amber);">—</div>
-      </div>
-
-      <!-- Model card -->
-      <div style="background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:14px 16px;">
-        <div style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ghost);
-                    text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Model</div>
-        <div style="font-family:'DM Mono',monospace;font-size:0.82rem;color:var(--ink);">MobileNetV3-Small</div>
-      </div>
-
-      <!-- Input card -->
-      <div style="background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:14px 16px;">
-        <div style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ghost);
-                    text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Input Size</div>
-        <div style="font-family:'DM Mono',monospace;font-size:0.82rem;color:var(--ink);">224 × 224 px</div>
-      </div>
-
-      <!-- Pre-process card -->
-      <div style="background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:14px 16px;">
-        <div style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ghost);
-                    text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Pre-process</div>
-        <div style="font-family:'DM Mono',monospace;font-size:0.82rem;color:var(--ink);">Otsu Binarization</div>
+        <span id="conf-mid" style="font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--ghost);">—</span>
+        <span style="font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--ghost);">100%</span>
       </div>
 
     </div>
