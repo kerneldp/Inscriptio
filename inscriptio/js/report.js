@@ -62,6 +62,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     emptyPanel('panel-original', 'No report loaded');
     emptyPanel('panel-shap', 'No SHAP map yet');
     emptyPanel('panel-gradcam', 'No Grad-CAM yet');
+    emptyPanel('panel-severe', 'No Severe Map yet');
 
     // Disable actions that require a report
     const saveBtn = document.getElementById('save-btn');
@@ -160,6 +161,81 @@ document.addEventListener('DOMContentLoaded', async () => {
       setPanel('panel-original', data.original_b64);
       setPanel('panel-shap',     data.shap_b64);
       setPanel('panel-gradcam',  data.gradcam_b64);
+      setPanel('panel-severe',   data.severe_anomaly_b64);
+
+      // ── Probability Averaging section ──────────────────
+      if (data.patch_breakdown && data.patch_breakdown.length > 0) {
+        const section = document.getElementById('prob-averaging-section');
+        const tbody   = document.getElementById('patch-tbody');
+        const formula = document.getElementById('avg-formula');
+        const diag    = document.getElementById('page-diagnosis');
+
+        if (section) section.style.display = 'block';
+        if (tbody) {
+          tbody.innerHTML = '';
+          data.patch_breakdown.forEach(p => {
+            const tr = document.createElement('tr');
+            tr.style.borderBottom = '1px solid var(--rule)';
+            const isPD = p.label.includes('PD') && !p.label.includes('LPD');
+            tr.innerHTML = `
+              <td style="padding:6px 8px;font-family:'DM Mono',monospace;">Patch ${p.patch_num}</td>
+              <td style="padding:6px 8px;font-family:'DM Mono',monospace;">${p.pd_prob}%</td>
+              <td style="padding:6px 8px;color:${isPD ? 'var(--danger)' : 'var(--teal)'};
+                         font-weight:600;">${p.label}</td>
+              <td style="padding:6px 8px;font-family:'DM Mono',monospace;">${p.confidence}%</td>`;
+            tbody.appendChild(tr);
+          });
+        }
+        if (formula) {
+          const probs   = data.patch_breakdown.map(p => p.pd_prob);
+          const avg     = (probs.reduce((a, b) => a + b, 0) / probs.length).toFixed(1);
+          const formulaStr = probs.join(' + ');
+          formula.innerHTML =
+            `Mathematical Average: (${formulaStr}) / ${probs.length}<br>` +
+            `<strong>Average PD Probability: ${avg}%</strong>`;
+        }
+        if (diag && pct != null) {
+          const verdict = (data.label || '').toLowerCase().includes('potential')
+            ? `▶ PAGE DIAGNOSIS: <span style="color:var(--danger);font-weight:700;">Potential Dysgraphia</span> (${pct.toFixed(1)}% Overall System Confidence)`
+            : `▶ PAGE DIAGNOSIS: <span style="color:var(--teal);font-weight:700;">Low Potential</span> (${pct.toFixed(1)}% Overall System Confidence)`;
+          diag.innerHTML = verdict;
+        }
+      }
+
+      // ── Evidence-Based Findings ────────────────────────
+      if (data.findings) {
+        const findingsSec  = document.getElementById('findings-section');
+        const findingsBody = document.getElementById('findings-body');
+        if (findingsSec)  findingsSec.style.display  = 'block';
+        if (findingsBody) findingsBody.textContent = data.findings;
+      }
+
+      // ── PDF Download button ────────────────────────────
+      const pdfBtn = document.getElementById('pdf-download-btn');
+      if (pdfBtn) {
+        pdfBtn.style.display = 'inline-flex';
+        pdfBtn.addEventListener('click', async () => {
+          pdfBtn.disabled    = true;
+          pdfBtn.textContent = 'Generating PDF…';
+          try {
+            const r = await authFetch(`${API}/api/report/${reportId}/pdf`);
+            if (!r.ok) throw new Error('PDF generation failed');
+            const blob = await r.blob();
+            const url  = URL.createObjectURL(blob);
+            const a    = document.createElement('a');
+            a.href     = url;
+            a.download = `inscriptio_report_RPT${String(reportId).padStart(4, '0')}.pdf`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('PDF downloaded.', 'success');
+          } catch {
+            showToast('Could not generate PDF.', 'error');
+          } finally {
+            pdfBtn.disabled    = false;
+            pdfBtn.textContent = '⬇ Download PDF Report';
+          }
+        });
+      }
 
       // Pre-fill notes if already saved
       const notesField = document.getElementById('educator-notes');
