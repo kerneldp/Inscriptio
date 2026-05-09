@@ -101,6 +101,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (trendSection) trendSection.style.display = 'block';
       if (emptyState) emptyState.style.display = 'none';
 
+      await loadTrend(studentId);
+
     } catch (err) {
       showToast(`Could not load comparison: ${err.message}`, 'error');
     } finally {
@@ -118,21 +120,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     const displayDate = (report.session_date || report.created_at || '').split('T')[0] || '—';
     dateEl.textContent = displayDate;
 
-    const score      = report.softmax_score != null ? (report.softmax_score * 100).toFixed(1) : '—';
-    const label      = report.label || '—';
-    const statusCls  = label === 'Potential' ? 'potential' : label === 'Low Potential' ? 'low' : 'pending';
-    const barCls     = label === 'Potential' ? 'potential' : '';
+    const score     = report.softmax_score != null ? (report.softmax_score * 100).toFixed(1) : '—';
+    const label     = report.label || '—';
+    const statusCls = label === 'Potential' ? 'potential' : label === 'Low Potential' ? 'low' : 'pending';
+    const barCls    = label === 'Potential' ? 'potential' : '';
     const verdictTxt = report.verdict
       ? `<span class="compare-meta-val" style="text-transform:capitalize">${report.verdict}</span>`
       : `<span class="compare-meta-val" style="color:var(--amber)">Pending</span>`;
 
-    const imgHtml = report.original_b64
-      ? `<img src="data:image/png;base64,${report.original_b64}"
-              style="width:100%;border-radius:8px;margin-bottom:14px;" alt="Handwriting">`
-      : '';
+    // 4-panel HXAI image grid
+    const panels = [
+      { key: 'original_b64',       label: '① Original' },
+      { key: 'shap_b64',           label: '② SHAP' },
+      { key: 'gradcam_b64',        label: '③ Grad-CAM' },
+      { key: 'severe_anomaly_b64', label: '④ Severe Focus' },
+    ];
+    const panelCells = panels.map(p => !report[p.key] ? '' : `
+      <div style="border:1px solid var(--rule);border-radius:8px;overflow:hidden;">
+        <div style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ghost);
+                    padding:5px 8px;background:#fafaf8;border-bottom:1px solid var(--rule);">
+          ${p.label}
+        </div>
+        <img src="data:image/png;base64,${report[p.key]}"
+             style="width:100%;height:auto;display:block;" alt="${p.label}">
+      </div>`).join('');
+
+    const gridHtml = panelCells ? `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
+        ${panelCells}
+      </div>` : '';
 
     bodyEl.innerHTML = `
-      ${imgHtml}
+      ${gridHtml}
       <div class="compare-score-row">
         <span class="compare-score-label">Confidence</span>
         <span class="compare-score-value ${statusCls}">${score}%</span>
@@ -157,7 +176,105 @@ document.addEventListener('DOMContentLoaded', async () => {
       </div>`;
   }
 
-  // ── Event listeners ───────────────────────────────────────
+  // ── Real trend chart ──────────────────────────────────────
+  let trendChartInstance = null;
+
+  async function loadTrend(studentId) {
+    try {
+      const res    = await authFetch(`${API}/api/students/${studentId}/trend`);
+      const data   = await res.json();
+      const points = data.points || [];
+
+      const canvas   = document.getElementById('trend-chart');
+      const emptyMsg = document.getElementById('trend-empty');
+
+      if (points.length < 2) {
+        if (canvas)   canvas.style.display  = 'none';
+        if (emptyMsg) emptyMsg.style.display = 'block';
+        return;
+      }
+
+      if (canvas)   canvas.style.display  = 'block';
+      if (emptyMsg) emptyMsg.style.display = 'none';
+
+      const labels = points.map(p => (p.session_date || p.created_at || '').split('T')[0]);
+      const scores = points.map(p =>
+        p.softmax_score != null ? parseFloat((p.softmax_score * 100).toFixed(1)) : null);
+
+      if (trendChartInstance) { trendChartInstance.destroy(); trendChartInstance = null; }
+
+      trendChartInstance = new Chart(canvas, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Confidence Score (%)',
+              data: scores,
+              borderColor: '#0e9fa0',
+              backgroundColor: 'rgba(14,159,160,0.08)',
+              borderWidth: 2.5,
+              pointBackgroundColor: scores.map(s => s != null && s >= 80 ? '#c0392b' : '#0e9fa0'),
+              pointRadius: 5,
+              tension: 0.35,
+              fill: true,
+              spanGaps: true,
+            },
+            {
+              label: 'Flagged Threshold (80%)',
+              data: Array(labels.length).fill(80),
+              borderColor: 'rgba(192,57,43,0.5)',
+              borderDash: [6, 4],
+              borderWidth: 1.5,
+              pointRadius: 0,
+              fill: false,
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          interaction: { intersect: false, mode: 'index' },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: ctx => {
+                  if (ctx.datasetIndex === 1) return 'Threshold: 80%';
+                  const pt = points[ctx.dataIndex];
+                  return `Score: ${ctx.parsed.y}%  (${pt?.label || ''})`;
+                },
+                afterLabel: ctx => {
+                  if (ctx.datasetIndex !== 0) return '';
+                  const pt = points[ctx.dataIndex];
+                  return pt?.verdict ? `Verdict: ${pt.verdict}` : '';
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              min: 0, max: 100,
+              title: { display: true, text: 'Confidence Score (%)',
+                       font: { family: 'DM Mono', size: 11 }, color: '#8a8f9a' },
+              ticks: { font: { family: 'DM Mono', size: 10 }, color: '#8a8f9a' },
+              grid: { color: '#ede8e0' }
+            },
+            x: {
+              title: { display: true, text: 'Session Date',
+                       font: { family: 'DM Mono', size: 11 }, color: '#8a8f9a' },
+              ticks: { font: { family: 'DM Mono', size: 10 }, color: '#8a8f9a',
+                       maxRotation: 35 },
+              grid: { display: false }
+            }
+          }
+        }
+      });
+    } catch (err) {
+      console.error('Trend chart error:', err);
+    }
+  }
+
+
   studentSel?.addEventListener('change', () => {
     if (studentSel.value) loadReports(studentSel.value);
     else {
