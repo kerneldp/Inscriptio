@@ -20,11 +20,18 @@ def ensure_schema():
     Lightweight schema migration for the demo SQLite DB.
     `Base.metadata.create_all()` does not add new columns to existing tables.
     """
+    new_cols = {
+        "session_date":       "TEXT",
+        "severe_anomaly_img": "TEXT",
+        "patch_scores":       "TEXT",
+        "findings":           "TEXT",
+    }
     with engine.connect() as conn:
-        cols = [row[1] for row in conn.execute(text("PRAGMA table_info(reports)")).fetchall()]
-        if "session_date" not in cols:
-            conn.execute(text("ALTER TABLE reports ADD COLUMN session_date TEXT"))
-            conn.commit()
+        existing = [row[1] for row in conn.execute(text("PRAGMA table_info(reports)")).fetchall()]
+        for col, col_type in new_cols.items():
+            if col not in existing:
+                conn.execute(text(f"ALTER TABLE reports ADD COLUMN {col} {col_type}"))
+        conn.commit()
 
 
 def get_db():
