@@ -145,13 +145,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       // Confidence bar
-      const confBar = document.getElementById('conf-bar-fill');
-      if (confBar && pct != null) {
-        const pctStr = pct.toFixed(1);
-        confBar.style.width = '0%';
-        setTimeout(() => { confBar.style.width = pctStr + '%'; }, 400);
+     const confBar = document.getElementById('conf-bar-fill');
+     if (confBar && pct != null) {
+        confBar.style.width = pct.toFixed(1) + '%';
+        confBar.style.backgroundColor = (data.label || '').toLowerCase().includes('potential') ? 'var(--danger)' : 'var(--teal)';
       }
-
       // Panel images — replace placeholders with real base64 images
       function setPanel(id, b64) {
         const el = document.getElementById(id);
