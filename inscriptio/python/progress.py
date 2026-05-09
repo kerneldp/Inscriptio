@@ -100,9 +100,10 @@ def compare_reports(
         if include_images:
             out.update(
                 {
-                    "original_b64": _load_b64(r.original_img),
-                    "gradcam_b64": _load_b64(r.gradcam_img),
-                    "shap_b64": _load_b64(r.shap_img),
+                    "original_b64":       _load_b64(r.original_img),
+                    "shap_b64":           _load_b64(r.shap_img),
+                    "gradcam_b64":        _load_b64(r.gradcam_img),
+                    "severe_anomaly_b64": _load_b64(r.severe_anomaly_img),
                 }
             )
         return out
