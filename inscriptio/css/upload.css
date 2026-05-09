@@ -142,7 +142,7 @@ body.upload-page {
 /* Preview panels */
 .preview-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;   /* vertical — one panel per row */
   gap: 16px;
 }
 
@@ -173,18 +173,20 @@ body.upload-page {
   font-weight: 500;
 }
 
+/* Dynamic height — matches actual image dimensions */
 .preview-img {
   width: 100%;
-  aspect-ratio: 1;
-  object-fit: cover;
+  height: auto;
   display: block;
 }
 
 .preview-placeholder {
-  aspect-ratio: 1;
+  width: 100%;
+  min-height: 120px;
   display: flex; align-items: center; justify-content: center;
   background: var(--mist);
   flex-direction: column; gap: 8px;
+  padding: 24px 0;
 }
 
 .preview-placeholder-text {
