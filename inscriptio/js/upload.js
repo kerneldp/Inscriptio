@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     analyzeBtn.disabled    = true;
     analyzeTxt.textContent = 'Analyzing…';
-    showToast('Running HXAI pipeline — this may take 30–60 seconds.', 'info');
+    showToast('Running XAI pipeline — this may take 30–60 seconds.', 'info');
 
     try {
       const form = new FormData();

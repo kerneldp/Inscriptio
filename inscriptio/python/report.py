@@ -1,5 +1,5 @@
 """
-report.py — Full HXAI ML Pipeline
+report.py — Full XAI ML Pipeline
 Endpoints:
   POST /api/report/preprocess/preview  — upload image, return binarized preview
   POST /api/report/analyze             — run MobileNetV3 + GradCAM + SHAP
