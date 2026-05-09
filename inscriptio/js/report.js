@@ -130,7 +130,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       const confMid = document.getElementById('conf-mid');
       const metaValidated = document.getElementById('meta-validated');
 
-      if (confValue) confValue.textContent = pct != null ? pct.toFixed(1) + '%' : '—';
+      if (confValue) {
+        confValue.textContent = pct != null ? pct.toFixed(1) + '%' : '—';
+        confValue.classList.toggle('high', isPotential);
+        confValue.classList.toggle('low', !isPotential);
+      }
       if (confSub) confSub.textContent = data.label || '—';
       if (metaLabel) {
         metaLabel.textContent = data.label || '—';
@@ -148,7 +152,7 @@ document.addEventListener('DOMContentLoaded', async () => {
      const confBar = document.getElementById('conf-bar-fill');
      if (confBar && pct != null) {
         confBar.style.width = pct.toFixed(1) + '%';
-        confBar.style.backgroundColor = (data.label || '').toLowerCase().includes('potential') ? 'var(--danger)' : 'var(--teal)';
+        confBar.style.backgroundColor = isPotential ? 'var(--danger)' : 'var(--teal)';
       }
       // Panel images — replace placeholders with real base64 images
       function setPanel(id, b64) {
