@@ -62,7 +62,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     emptyPanel('panel-original', 'No report loaded');
     emptyPanel('panel-shap', 'No SHAP map yet');
     emptyPanel('panel-gradcam', 'No Grad-CAM yet');
-    emptyPanel('panel-severe', 'No Severe Map yet');
 
     // Disable actions that require a report
     const saveBtn = document.getElementById('save-btn');
@@ -91,11 +90,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (!res.ok) throw new Error(data.detail || 'Could not load report');
 
       const pct = data.softmax_score != null ? (data.softmax_score * 100) : null;
+      const avgPD = data.avg_pd_prob != null ? data.avg_pd_prob : (pct ?? 0);
+
+      // Exact match — "Low Potential" must NOT be caught by 'potential' check
+      const isPotential = (data.label || '').trim().toLowerCase() === 'potential';
 
       // Top status flag
       const flag = document.getElementById('status-flag');
       if (flag) {
-        const isPotential = (data.label || '').toLowerCase().includes('potential');
         flag.classList.toggle('potential', isPotential);
         flag.classList.toggle('low', !isPotential);
         flag.textContent = isPotential ? 'Potential Dysgraphia' : 'Low Potential';
@@ -132,7 +134,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (confSub) confSub.textContent = data.label || '—';
       if (metaLabel) {
         metaLabel.textContent = data.label || '—';
-        metaLabel.style.color = (data.label || '').toLowerCase().includes('potential') ? 'var(--danger)' : 'var(--teal)';
+        metaLabel.style.color = isPotential ? 'var(--danger)' : 'var(--teal)';
       }
       if (metaConfidence) metaConfidence.textContent = pct != null ? pct.toFixed(1) + '%' : '—';
       if (confMid) confMid.textContent = pct != null ? pct.toFixed(1) + '%' : '—';
@@ -194,11 +196,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             `Mathematical Average: (${formulaStr}) / ${probs.length}<br>` +
             `<strong>Average PD Probability: ${avg}%</strong>`;
         }
-        if (diag && pct != null) {
-          const verdict = (data.label || '').toLowerCase().includes('potential')
-            ? `▶ PAGE DIAGNOSIS: <span style="color:var(--danger);font-weight:700;">Potential Dysgraphia</span> (${pct.toFixed(1)}% Overall System Confidence)`
-            : `▶ PAGE DIAGNOSIS: <span style="color:var(--teal);font-weight:700;">Low Potential</span> (${pct.toFixed(1)}% Overall System Confidence)`;
-          diag.innerHTML = verdict;
+        if (diag && avgPD != null) {
+          // Show PD prob for Potential, Normal prob (100-PD) for Low Potential
+          const diagPct   = isPotential ? avgPD.toFixed(1) : (100 - avgPD).toFixed(1);
+          const diagColor = isPotential ? 'var(--danger)' : 'var(--teal)';
+          const diagLabel = isPotential ? 'Potential Dysgraphia' : 'Low Potential';
+          diag.innerHTML  = `▶ PAGE DIAGNOSIS: <span style="color:${diagColor};font-weight:700;">${diagLabel}</span> (${diagPct}% Overall System Confidence)`;
         }
       }
 
