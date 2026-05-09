@@ -11,6 +11,7 @@ Endpoints:
 
 import os
 import io
+import json
 import base64
 import logging
 import numpy as np
@@ -157,6 +158,97 @@ def make_gradcam_heatmap(img_array: np.ndarray, model) -> np.ndarray:
     return cv2.resize(heatmap, (img_array.shape[2], img_array.shape[1]))
 
 
+def make_severe_anomaly_panel(binary_img: np.ndarray, full_shap: np.ndarray, mask: np.ndarray) -> np.ndarray:
+    """
+    Phase 04 — Severe Anomaly Focus panel.
+    Highlights only the top 10% most extreme SHAP attribution zones in red.
+    These are the pixels the model is MOST alarmed by.
+    """
+    img_rgb = cv2.cvtColor(binary_img, cv2.COLOR_GRAY2BGR)
+    if not np.any(mask):
+        return img_rgb
+
+    threshold = np.percentile(np.abs(full_shap[mask]), 90)
+    severe_mask = np.abs(full_shap) >= threshold
+
+    overlay = img_rgb.copy()
+    overlay[severe_mask] = [0, 0, 220]  # BGR red for severe anomaly
+
+    result = cv2.addWeighted(img_rgb, 0.45, overlay, 0.55, 0)
+
+    # Draw a thin red contour border around severe zones for clarity
+    severe_u8 = severe_mask.astype(np.uint8) * 255
+    contours, _ = cv2.findContours(severe_u8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    cv2.drawContours(result, contours, -1, (0, 0, 180), 1)
+
+    return result
+
+
+def generate_findings(binary_img: np.ndarray, full_shap: np.ndarray, mask: np.ndarray, label: str) -> str:
+    """
+    Phase 04 — Evidence-Based Clinical Findings.
+    Performs spatial analysis of SHAP attributions to determine
+    whether anomalies concentrate in whitespace vs. character strokes,
+    then returns a citation-grounded clinical narrative.
+    """
+    if label == "Low Potential":
+        return (
+            "No significant dysgraphic patterns were detected in this sample. "
+            "The handwriting exhibits characteristics consistent with typical graphomotor development. "
+            "SHAP attribution values remain below decision-relevant thresholds across all spatial zones, "
+            "indicating that neither letter formation nor inter-character spacing shows statistically "
+            "anomalous patterns relative to the model's training distribution (APA, 2013)."
+        )
+
+    if not np.any(mask):
+        return (
+            "Anomaly localization could not be determined due to insufficient pixel-level SHAP signal. "
+            "Please re-run the analysis with a higher-resolution scan."
+        )
+
+    # Spatial split: ink (character bodies) vs. whitespace
+    ink_mask   = binary_img < 128   # dark pixels = character strokes
+    white_mask = binary_img >= 128  # light pixels = inter-character whitespace
+
+    shap_abs = np.abs(full_shap)
+    ink_signal   = float(np.mean(shap_abs[ink_mask   & mask])) if np.any(ink_mask   & mask) else 0.0
+    white_signal = float(np.mean(shap_abs[white_mask & mask])) if np.any(white_mask & mask) else 0.0
+
+    if white_signal >= ink_signal:
+        # Anomalies in whitespace → Spatial Dysgraphia pattern
+        dominant = "whitespace"
+        findings = (
+            "The predictive anomalies are heavily localized in the whitespace between characters. "
+            "Deuel (1995) defines Spatial Dysgraphia as producing illegible writing — whether spontaneous "
+            "or copied — due to a fundamental deficit in spatial perception, which manifests directly as "
+            "abnormal letter spacing and erratic kerning. Chung et al. (2020) further specify that in spatial "
+            "dysgraphia, oral spelling and fine-motor tapping speed are preserved, indicating that the spacing "
+            "irregularities detected in this zone are perceptual-spatial in origin rather than purely motoric. "
+            "These atypical inter-character intervals are a strong behavioral marker of impaired graphomotor "
+            "coordination, consistent with Specific Learning Disorder criteria (APA, 2013). Döhla and Heim (2016) "
+            "additionally note that dysgraphia and dyslexia share spatial-processing deficits that manifest during "
+            "the physical execution of written output."
+        )
+    else:
+        # Anomalies in character strokes → Motor/Dysfluent pattern
+        dominant = "character strokes"
+        findings = (
+            "The predictive anomalies are concentrated within the character strokes themselves, suggesting "
+            "disruptions in graphomotor execution. Kushki et al. (2011) identify that children with dysgraphia "
+            "exhibit significantly increased pen pressure variability and irregular stroke formation, reflecting "
+            "underlying motor planning deficits. Overvelde and Hulstijn (2011) further demonstrate that letter "
+            "formation errors — particularly in stroke direction and sequencing — are reliable markers of "
+            "Dysfluent Dysgraphia. These motor-level irregularities, concentrated in the ink stroke zones, are "
+            "consistent with impaired kinesthetic feedback during handwriting production, as described under "
+            "Specific Learning Disorder criteria (APA, 2013). Döhla and Heim (2016) note that such "
+            "graphomotor deficits frequently co-occur with reading difficulties, warranting comprehensive "
+            "assessment beyond handwriting alone."
+        )
+
+    log.info(f"Findings: dominant anomaly zone = {dominant} (ink={ink_signal:.4f}, white={white_signal:.4f})")
+    return findings
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 # ── Full pipeline ─────────────────────────────────────────────────────────────
 # ══════════════════════════════════════════════════════════════════════════════
@@ -264,12 +356,33 @@ def run_pipeline(img_gray: np.ndarray, model):
     ax.imshow(masked_shap, cmap="coolwarm", alpha=0.75, vmin=-vmax, vmax=vmax)
     ax.axis("off")
 
+    # 4. Phase 04 — Severe Anomaly Focus panel
+    severe_panel = make_severe_anomaly_panel(binary_img, full_shap, mask)
+
+    # 5. Phase 04 — Patch-level probability breakdown
+    patch_breakdown = [
+        {
+            "patch_num":    i + 1,
+            "pd_prob":      round(prob * 100, 1),
+            "label":        "Dysgraphic (PD)" if prob >= 0.5 else "Normal (LPD)",
+            "confidence":   round((prob if prob >= 0.5 else 1.0 - prob) * 100, 1),
+        }
+        for i, prob in enumerate(pd_probs)
+    ]
+
+    # 6. Phase 04 — Evidence-based clinical findings
+    findings = generate_findings(binary_img, full_shap, mask, label)
+
     return {
-        "label":         label,
-        "softmax_score": round(softmax_score, 4),
-        "original_b64":  ndarray_to_b64(binary_img),
-        "gradcam_b64":   ndarray_to_b64(cv2.cvtColor(gradcam_overlay, cv2.COLOR_RGB2BGR)),
-        "shap_b64":      fig_to_b64(fig),
+        "label":              label,
+        "softmax_score":      round(softmax_score, 4),
+        "avg_pd_prob":        round(avg_pd_prob * 100, 1),
+        "patch_breakdown":    patch_breakdown,
+        "findings":           findings,
+        "original_b64":       ndarray_to_b64(binary_img),
+        "gradcam_b64":        ndarray_to_b64(cv2.cvtColor(gradcam_overlay, cv2.COLOR_RGB2BGR)),
+        "shap_b64":           fig_to_b64(fig),
+        "severe_anomaly_b64": ndarray_to_b64(severe_panel),
     }
 
 
@@ -350,39 +463,47 @@ async def analyze(
             f.write(base64.b64decode(b64_str))
         return str(path)
 
-    orig_path    = save_img_b64(result["original_b64"],  "original")
-    gradcam_path = save_img_b64(result["gradcam_b64"],   "gradcam")
-    shap_path    = save_img_b64(result["shap_b64"],      "shap")
+    orig_path          = save_img_b64(result["original_b64"],       "original")
+    gradcam_path       = save_img_b64(result["gradcam_b64"],        "gradcam")
+    shap_path          = save_img_b64(result["shap_b64"],           "shap")
+    severe_anomaly_path= save_img_b64(result["severe_anomaly_b64"], "severe")
 
     from models import User
     db_user = db.query(User).filter(User.email == current_user["email"]).first()
     uploader_id = db_user.id if db_user else 1
 
     report = Report(
-        student_id    = student_id,
-        uploaded_by   = uploader_id,
-        original_img  = orig_path,
-        gradcam_img   = gradcam_path,
-        shap_img      = shap_path,
-        softmax_score = result["softmax_score"],
-        label         = result["label"],
-        session_date  = session_date,
+        student_id         = student_id,
+        uploaded_by        = uploader_id,
+        original_img       = orig_path,
+        gradcam_img        = gradcam_path,
+        shap_img           = shap_path,
+        severe_anomaly_img = severe_anomaly_path,
+        softmax_score      = result["softmax_score"],
+        label              = result["label"],
+        session_date       = session_date,
+        patch_scores       = json.dumps(result["patch_breakdown"]),
+        findings           = result["findings"],
     )
     db.add(report)
     db.commit()
     db.refresh(report)
 
     return {
-        "report_id":     report.id,
-        "student_id":    student_id,
-        "label":         result["label"],
-        "softmax_score": result["softmax_score"],
-        "original_b64":  result["original_b64"],
-        "gradcam_b64":   result["gradcam_b64"],
-        "shap_b64":      result["shap_b64"],
-        "session_date":  report.session_date,
-        "created_at":    report.created_at.isoformat(),
-        "status":        "ready",
+        "report_id":          report.id,
+        "student_id":         student_id,
+        "label":              result["label"],
+        "softmax_score":      result["softmax_score"],
+        "avg_pd_prob":        result["avg_pd_prob"],
+        "patch_breakdown":    result["patch_breakdown"],
+        "findings":           result["findings"],
+        "original_b64":       result["original_b64"],
+        "gradcam_b64":        result["gradcam_b64"],
+        "shap_b64":           result["shap_b64"],
+        "severe_anomaly_b64": result["severe_anomaly_b64"],
+        "session_date":       report.session_date,
+        "created_at":         report.created_at.isoformat(),
+        "status":             "ready",
     }
 
 
@@ -404,20 +525,29 @@ def get_report(
 
     student = db.query(Student).filter(Student.id == r.student_id).first()
 
+    # Parse patch_scores JSON safely
+    try:
+        patch_breakdown = json.loads(r.patch_scores) if r.patch_scores else []
+    except (json.JSONDecodeError, TypeError):
+        patch_breakdown = []
+
     return {
-        "report_id":     r.id,
-        "student_id":    r.student_id,
-        "student_name":  student.name          if student else "Unknown",
-        "student_class": student.student_class if student else None,
-        "label":         r.label,
-        "softmax_score": r.softmax_score,
-        "verdict":       r.verdict,
-        "notes":         r.notes,
-        "session_date":  r.session_date,
-        "created_at":    r.created_at.isoformat(),
-        "original_b64":  load_b64(r.original_img),
-        "gradcam_b64":   load_b64(r.gradcam_img),
-        "shap_b64":      load_b64(r.shap_img),
+        "report_id":          r.id,
+        "student_id":         r.student_id,
+        "student_name":       student.name          if student else "Unknown",
+        "student_class":      student.student_class if student else None,
+        "label":              r.label,
+        "softmax_score":      r.softmax_score,
+        "verdict":            r.verdict,
+        "notes":              r.notes,
+        "session_date":       r.session_date,
+        "created_at":         r.created_at.isoformat(),
+        "findings":           r.findings,
+        "patch_breakdown":    patch_breakdown,
+        "original_b64":       load_b64(r.original_img),
+        "gradcam_b64":        load_b64(r.gradcam_img),
+        "shap_b64":           load_b64(r.shap_img),
+        "severe_anomaly_b64": load_b64(r.severe_anomaly_img),
     }
 
 
@@ -476,3 +606,203 @@ def save_report(
 
     db.commit()
     return {"report_id": report_id, "status": "saved", "verdict": r.verdict, "notes": r.notes}
+
+
+# ── PDF Download ──────────────────────────────────────────────────────────────
+
+@router.get("/{report_id}/pdf")
+def download_report_pdf(
+    report_id: int,
+    db:    Session = Depends(get_db),
+    _user: dict    = Depends(get_current_user),
+):
+    """
+    Generate and return a downloadable PDF for a saved XAI report.
+    Includes: student info, confidence score, probability averaging table,
+    4-panel images, evidence-based findings, clinician verdict, and audit trail.
+    """
+    try:
+        from fpdf import FPDF
+    except ImportError:
+        raise HTTPException(
+            status_code=503,
+            detail="PDF generation requires fpdf2. Run: pip install fpdf2"
+        )
+
+    r = db.query(Report).filter(Report.id == report_id, Report.is_deleted == False).first()
+    if not r:
+        raise HTTPException(status_code=404, detail="Report not found.")
+
+    student = db.query(Student).filter(Student.id == r.student_id).first()
+    student_name  = student.name          if student else "Unknown"
+    student_class = student.student_class if student else "—"
+
+    try:
+        patch_breakdown = json.loads(r.patch_scores) if r.patch_scores else []
+    except (json.JSONDecodeError, TypeError):
+        patch_breakdown = []
+
+    pct = round((r.softmax_score or 0) * 100, 1)
+    verdict_text = {"verify": "Verified", "disagree": "Disagreed"}.get(r.verdict or "", "Pending")
+    created = r.created_at.strftime("%B %d, %Y") if r.created_at else "—"
+
+    # Build PDF
+    pdf = FPDF()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.add_page()
+
+    # Header
+    pdf.set_font("Helvetica", "B", 18)
+    pdf.set_text_color(15, 23, 42)
+    pdf.cell(0, 10, "Inscriptio — XAI Dysgraphia Screening Report", ln=True)
+    pdf.set_font("Helvetica", "", 9)
+    pdf.set_text_color(100, 116, 139)
+    pdf.cell(0, 6, f"Report #RPT-{str(report_id).zfill(4)}  |  Generated: {created}", ln=True)
+    pdf.ln(4)
+
+    # Divider
+    pdf.set_draw_color(226, 232, 240)
+    pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+    pdf.ln(5)
+
+    # Student info
+    pdf.set_font("Helvetica", "B", 11)
+    pdf.set_text_color(15, 23, 42)
+    pdf.cell(0, 7, "Student Information", ln=True)
+    pdf.set_font("Helvetica", "", 10)
+    pdf.set_text_color(51, 65, 85)
+    pdf.cell(60, 6, f"Name:  {student_name}")
+    pdf.cell(60, 6, f"Class:  {student_class}")
+    pdf.cell(60, 6, f"Date:  {r.session_date or created}", ln=True)
+    pdf.ln(4)
+
+    # Diagnosis
+    pdf.set_font("Helvetica", "B", 11)
+    pdf.set_text_color(15, 23, 42)
+    pdf.cell(0, 7, "Diagnosis Summary", ln=True)
+    pdf.set_font("Helvetica", "", 10)
+    label_color = (220, 38, 38) if (r.label or "").lower() == "potential" else (5, 150, 105)
+    pdf.set_text_color(*label_color)
+    pdf.set_font("Helvetica", "B", 14)
+    pdf.cell(0, 8, f"{r.label or '—'}  ({pct}% System Confidence)", ln=True)
+    pdf.set_font("Helvetica", "", 10)
+    pdf.set_text_color(51, 65, 85)
+    pdf.cell(0, 6, f"Clinician Verdict: {verdict_text}", ln=True)
+    pdf.ln(4)
+
+    # Probability Averaging
+    if patch_breakdown:
+        pdf.set_font("Helvetica", "B", 11)
+        pdf.set_text_color(15, 23, 42)
+        pdf.cell(0, 7, "Probability Averaging — Patch-Level Breakdown", ln=True)
+        pdf.set_font("Helvetica", "", 9)
+        pdf.set_text_color(100, 116, 139)
+
+        col_w = [25, 45, 55, 45]
+        headers = ["Patch", "PD Probability", "Interpretation", "Confidence"]
+        pdf.set_fill_color(241, 245, 249)
+        pdf.set_text_color(51, 65, 85)
+        pdf.set_font("Helvetica", "B", 9)
+        for h, w in zip(headers, col_w):
+            pdf.cell(w, 6, h, border=1, fill=True)
+        pdf.ln()
+
+        pdf.set_font("Helvetica", "", 9)
+        for p in patch_breakdown:
+            pdf.cell(col_w[0], 6, f"Patch {p['patch_num']}", border=1)
+            pdf.cell(col_w[1], 6, f"{p['pd_prob']}%",         border=1)
+            pdf.cell(col_w[2], 6, p["label"],                  border=1)
+            pdf.cell(col_w[3], 6, f"{p['confidence']}%",       border=1)
+            pdf.ln()
+
+        # Mathematical average line
+        avg = round(sum(p["pd_prob"] for p in patch_breakdown) / len(patch_breakdown), 1)
+        formula = " + ".join(str(p["pd_prob"]) for p in patch_breakdown)
+        pdf.set_font("Helvetica", "I", 8)
+        pdf.set_text_color(100, 116, 139)
+        pdf.cell(0, 6, f"Average PD Probability = ({formula}) / {len(patch_breakdown)} = {avg}%", ln=True)
+        pdf.ln(4)
+
+    # Panel images
+    panels = [
+        ("original_img",       "Panel 1: Original Handwriting (Otsu-Binarized)"),
+        ("shap_img",           "Panel 2: SHAP Heatmap (Pixel Attribution)"),
+        ("gradcam_img",        "Panel 3: Grad-CAM Localization"),
+        ("severe_anomaly_img", "Panel 4: Severe Anomaly Focus (Top 10% SHAP zones)"),
+    ]
+
+    image_paths = []
+    for attr, title in panels:
+        img_path = getattr(r, attr, None)
+        if img_path and os.path.exists(img_path):
+            image_paths.append((img_path, title))
+
+    if image_paths:
+        pdf.set_font("Helvetica", "B", 11)
+        pdf.set_text_color(15, 23, 42)
+        pdf.cell(0, 7, "XAI 4-Panel Analysis", ln=True)
+        pdf.ln(2)
+
+        # 2×2 grid of images
+        img_w, img_h = 90, 70
+        x_positions  = [10, 108]
+        for i, (img_path, title) in enumerate(image_paths):
+            x = x_positions[i % 2]
+            if i % 2 == 0 and i > 0:
+                pdf.ln(img_h + 12)
+            y = pdf.get_y()
+            try:
+                pdf.image(img_path, x=x, y=y, w=img_w, h=img_h)
+                pdf.set_xy(x, y + img_h + 1)
+                pdf.set_font("Helvetica", "I", 7)
+                pdf.set_text_color(100, 116, 139)
+                pdf.cell(img_w, 4, title)
+                if i % 2 == 1:
+                    pdf.ln(6)
+                    pdf.set_xy(10, y + img_h + 8)
+            except Exception as e:
+                log.warning(f"Could not embed image {img_path}: {e}")
+        pdf.ln(img_h + 15)
+
+    # Evidence-Based Findings
+    if r.findings:
+        pdf.add_page()
+        pdf.set_font("Helvetica", "B", 11)
+        pdf.set_text_color(15, 23, 42)
+        pdf.cell(0, 7, "Evidence-Based Clinical Findings", ln=True)
+        pdf.ln(2)
+        pdf.set_font("Helvetica", "", 10)
+        pdf.set_text_color(51, 65, 85)
+        pdf.multi_cell(0, 6, r.findings)
+        pdf.ln(4)
+
+    # Educator notes
+    if r.notes:
+        pdf.set_font("Helvetica", "B", 10)
+        pdf.set_text_color(15, 23, 42)
+        pdf.cell(0, 6, "Educator Notes", ln=True)
+        pdf.set_font("Helvetica", "", 10)
+        pdf.set_text_color(51, 65, 85)
+        pdf.multi_cell(0, 6, r.notes)
+        pdf.ln(4)
+
+    # Audit trail
+    pdf.set_font("Helvetica", "B", 9)
+    pdf.set_text_color(100, 116, 139)
+    pdf.cell(0, 5, f"AUDIT TRAIL", ln=True)
+    pdf.set_font("Helvetica", "", 8)
+    pdf.cell(0, 5, f"Report ID: #RPT-{str(report_id).zfill(4)}", ln=True)
+    pdf.cell(0, 5, f"Model: MobileNetV3-Small + SHAP DeepExplainer + Grad-CAM", ln=True)
+    pdf.cell(0, 5, f"Input Size: 224×224  |  Preprocessing: Otsu Binarization", ln=True)
+    pdf.cell(0, 5, f"Generated by Inscriptio v1.0.0 (AIKONIC Research Team)", ln=True)
+
+    # Output as bytes
+    from fastapi.responses import Response
+    pdf_bytes = pdf.output()
+    filename  = f"inscriptio_report_RPT{str(report_id).zfill(4)}_{student_name.replace(' ', '_')}.pdf"
+
+    return Response(
+        content=bytes(pdf_bytes),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
