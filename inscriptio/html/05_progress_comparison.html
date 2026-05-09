@@ -222,41 +222,12 @@
       <h3 class="section-subtitle">Confidence Score Trend</h3>
       
       <div class="chart-container">
-        <div class="chart-placeholder">
-          <!-- DEV NOTE: 
-               IMPLEMENTATION NOTE FOR BACKEND/FRONTEND DEVELOPERS:
-               1. Fetch historical confidence scores: GET /api/reports/{studentId}/history
-               2. Chart library to use: Chart.js or similar (not included - add to dependencies)
-               3. Data format expected:
-                  {
-                    dates: ['2025-04-01', '2025-04-15', '2025-05-01', '2025-05-15'],
-                    scores: [87.4, 84.2, 76.5, 72.1]
-                  }
-               4. Configuration:
-                  - Type: Line Chart
-                  - Title: "Softmax Confidence Scores Over Time"
-                  - Y-axis: Confidence Score (0-100)
-                  - X-axis: Date
-                  - Trend: Descending trend indicates improvement (lower confidence = better predictions)
-                  - Color: Use var(--teal) for the line
-          -->
-          <svg viewBox="0 0 600 300" style="width: 100%; max-width: 100%;">
-            <!-- Placeholder grid -->
-            <defs>
-              <pattern id="grid" width="60" height="30" patternUnits="userSpaceOnUse">
-                <path d="M 60 0 L 0 0 0 30" fill="none" stroke="#ddd8d0" stroke-width="0.5"/>
-              </pattern>
-            </defs>
-            <rect width="600" height="300" fill="url(#grid)" />
-            <!-- Placeholder line -->
-            <polyline points="40,80 150,100 260,140 370,160 480,180" stroke="var(--teal)" stroke-width="3" fill="none"/>
-            <!-- Placeholder text -->
-            <text x="300" y="260" text-anchor="middle" font-family="Figtree" font-size="12" fill="#8a8f9a">
-              [Trend Graph - Will be populated with historical confidence scores]
-            </text>
-          </svg>
+        <canvas id="trend-chart" style="width:100%;max-height:320px;"></canvas>
+        <div id="trend-empty" style="display:none;text-align:center;padding:40px 0;
+             font-size:0.85rem;color:var(--ghost);font-family:'DM Mono',monospace;">
+          Not enough data points to render trend. Upload more reports for this student.
         </div>
-        <div class="chart-legend">
+        <div class="chart-legend" style="margin-top:12px;">
           <div class="legend-item">
             <div class="legend-color" style="background: var(--teal);"></div>
             <span>Confidence Score</span>
@@ -395,6 +366,7 @@
   </div><!-- /.content -->
 </div><!-- /.main -->
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="../js/app.js"></script>
 <script src="../js/comparison.js"></script>
 </body>
