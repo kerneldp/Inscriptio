@@ -68,7 +68,7 @@
         <span>STU-001 — Jun 10, 2025</span>
       </div>
     </div>
-    <!-- DEV NOTE: Status flag driven by softmax output.
+    <!-- DEV NOTE: Status flag driven by risk score.
          If confidence >= threshold (e.g. 0.65) → "Potential"; else "Low Potential".
          Threshold configurable via GET /api/config. -->
     <div class="status-flag potential" id="status-flag">🔴 Potential Dysgraphia</div>
@@ -91,8 +91,8 @@
         </div>
       </div>
       <div class="confidence-display">
-        <div class="conf-label">Softmax Confidence</div>
-        <!-- DEV NOTE: Replace with live softmax output from model inference. -->
+        <div class="conf-label">Risk Score</div>
+        <!-- DEV NOTE: Replace with live risk score output from model inference. -->
         <div class="conf-value high" id="conf-value">—</div>
         <div class="conf-sub" id="conf-sub">—</div>
       </div>

@@ -695,7 +695,7 @@ def download_report_pdf(
     label_color = (220, 38, 38) if (r.label or "").lower() == "potential" else (5, 150, 105)
     pdf.set_text_color(*label_color)
     pdf.set_font("Helvetica", "B", 14)
-    pdf.cell(0, 8, f"{r.label or '-'}  ({pct}% System Confidence)", ln=True)
+    pdf.cell(0, 8, f"{r.label or '-'}  ({pct}% Risk Score)", ln=True)
     pdf.set_font("Helvetica", "", 10)
     pdf.set_text_color(51, 65, 85)
     pdf.cell(0, 6, f"Clinician Verdict: {verdict_text}", ln=True)

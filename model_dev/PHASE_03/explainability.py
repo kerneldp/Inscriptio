@@ -330,7 +330,7 @@ def generate_clinical_narrative(img_array, shap_values, predicted_class, confide
     # -------------------------------------------------------------------------
     narrative = "▶ AIKONIC CLINICAL DIAGNOSTIC REPORT\n"
     narrative += (
-        f"Classification: {predicted_class} ({confidence:.1f}% System Confidence)\n"
+        f"Classification: {predicted_class} ({confidence:.1f}% Risk Score)\n"
     )
     narrative += "-" * 60 + "\n"
 

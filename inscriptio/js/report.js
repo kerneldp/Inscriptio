@@ -73,23 +73,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // ── Role-based UI ─────────────────────────────────────────
   const isClinicianRole = user.role === 'clinician';
-  const validationRow   = document.getElementById('validation-row');
+  const validationRow = document.getElementById('validation-row');
   const clinicianLocked = document.getElementById('clinician-locked');
 
   if (validationRow && clinicianLocked) {
-    validationRow.style.display   = isClinicianRole ? 'flex'  : 'none';
-    clinicianLocked.style.display = isClinicianRole ? 'none'  : 'block';
+    validationRow.style.display = isClinicianRole ? 'flex' : 'none';
+    clinicianLocked.style.display = isClinicianRole ? 'none' : 'block';
   }
 
   // ── Load report data from backend ────────────────────────
   if (reportId) {
     try {
-      const res  = await authFetch(`${API}/api/report/${reportId}`);
+      const res = await authFetch(`${API}/api/report/${reportId}`);
       const data = await res.json();
 
       if (!res.ok) throw new Error(data.detail || 'Could not load report');
 
-      const pct = data.softmax_score != null ? (data.softmax_score * 100) : null;
+      const pct = data.softmax_score != null ? data.softmax_score * 100 : null;
       const avgPD = data.avg_pd_prob != null ? data.avg_pd_prob : (pct ?? 0);
 
       // Exact match — "Low Potential" must NOT be caught by 'potential' check
@@ -114,13 +114,22 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (metaName) metaName.textContent = data.student_name || '—';
       if (metaAvatar) {
         const nm = (data.student_name || '').trim();
-        const initials = nm ? nm.split(/\s+/).slice(0, 2).map(p => p[0]?.toUpperCase() || '').join('') : '—';
+        const initials = nm
+          ? nm
+              .split(/\s+/)
+              .slice(0, 2)
+              .map((p) => p[0]?.toUpperCase() || '')
+              .join('')
+          : '—';
         metaAvatar.textContent = initials || '—';
       }
       if (metaStudentId) metaStudentId.innerHTML = `<em>ID</em> #${data.student_id ?? '—'}`;
-      if (metaStudentClass) metaStudentClass.innerHTML = `<em>Class</em> ${data.student_class || '—'}`;
-      if (metaDate) metaDate.innerHTML = `<em>Date</em> ${data.created_at ? new Date(data.created_at).toLocaleDateString() : '—'}`;
-      if (metaReportId) metaReportId.innerHTML = `<em>Report</em> #RPT-${String(data.report_id ?? reportId).padStart(4, '0')}`;
+      if (metaStudentClass)
+        metaStudentClass.innerHTML = `<em>Class</em> ${data.student_class || '—'}`;
+      if (metaDate)
+        metaDate.innerHTML = `<em>Date</em> ${data.created_at ? new Date(data.created_at).toLocaleDateString() : '—'}`;
+      if (metaReportId)
+        metaReportId.innerHTML = `<em>Report</em> #RPT-${String(data.report_id ?? reportId).padStart(4, '0')}`;
 
       // Confidence widgets
       const confValue = document.getElementById('conf-value');
@@ -149,8 +158,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       // Confidence bar
-     const confBar = document.getElementById('conf-bar-fill');
-     if (confBar && pct != null) {
+      const confBar = document.getElementById('conf-bar-fill');
+      if (confBar && pct != null) {
         confBar.style.width = pct.toFixed(1) + '%';
         confBar.style.backgroundColor = isPotential ? 'var(--danger)' : 'var(--teal)';
       }
@@ -163,21 +172,21 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       setPanel('panel-original', data.original_b64);
-      setPanel('panel-shap',     data.shap_b64);
-      setPanel('panel-gradcam',  data.gradcam_b64);
-      setPanel('panel-severe',   data.severe_anomaly_b64);
+      setPanel('panel-shap', data.shap_b64);
+      setPanel('panel-gradcam', data.gradcam_b64);
+      setPanel('panel-severe', data.severe_anomaly_b64);
 
       // ── Probability Averaging section ──────────────────
       if (data.patch_breakdown && data.patch_breakdown.length > 0) {
         const section = document.getElementById('prob-averaging-section');
-        const tbody   = document.getElementById('patch-tbody');
+        const tbody = document.getElementById('patch-tbody');
         const formula = document.getElementById('avg-formula');
-        const diag    = document.getElementById('page-diagnosis');
+        const diag = document.getElementById('page-diagnosis');
 
         if (section) section.style.display = 'block';
         if (tbody) {
           tbody.innerHTML = '';
-          data.patch_breakdown.forEach(p => {
+          data.patch_breakdown.forEach((p) => {
             const tr = document.createElement('tr');
             tr.style.borderBottom = '1px solid var(--rule)';
             const isPD = p.label.includes('PD') && !p.label.includes('LPD');
@@ -191,8 +200,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           });
         }
         if (formula) {
-          const probs   = data.patch_breakdown.map(p => p.pd_prob);
-          const avg     = (probs.reduce((a, b) => a + b, 0) / probs.length).toFixed(1);
+          const probs = data.patch_breakdown.map((p) => p.pd_prob);
+          const avg = (probs.reduce((a, b) => a + b, 0) / probs.length).toFixed(1);
           const formulaStr = probs.join(' + ');
           formula.innerHTML =
             `Mathematical Average: (${formulaStr}) / ${probs.length}<br>` +
@@ -200,18 +209,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         if (diag && avgPD != null) {
           // Show PD prob for Potential, Normal prob (100-PD) for Low Potential
-          const diagPct   = isPotential ? avgPD.toFixed(1) : (100 - avgPD).toFixed(1);
+          const diagPct = isPotential ? avgPD.toFixed(1) : (100 - avgPD).toFixed(1);
           const diagColor = isPotential ? 'var(--danger)' : 'var(--teal)';
           const diagLabel = isPotential ? 'Potential Dysgraphia' : 'Low Potential';
-          diag.innerHTML  = `▶ PAGE DIAGNOSIS: <span style="color:${diagColor};font-weight:700;">${diagLabel}</span> (${diagPct}% Overall System Confidence)`;
+          diag.innerHTML = `PAGE DIAGNOSIS: <span style="color:${diagColor};font-weight:700;">${diagLabel}</span> (Clinical Severity Score: ${diagPct}%)`;
         }
       }
 
       // ── Evidence-Based Findings ────────────────────────
       if (data.findings) {
-        const findingsSec  = document.getElementById('findings-section');
+        const findingsSec = document.getElementById('findings-section');
         const findingsBody = document.getElementById('findings-body');
-        if (findingsSec)  findingsSec.style.display  = 'block';
+        if (findingsSec) findingsSec.style.display = 'block';
         if (findingsBody) findingsBody.textContent = data.findings;
       }
 
@@ -220,15 +229,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (pdfBtn) {
         pdfBtn.style.display = 'inline-flex';
         pdfBtn.addEventListener('click', async () => {
-          pdfBtn.disabled    = true;
+          pdfBtn.disabled = true;
           pdfBtn.textContent = 'Generating PDF…';
           try {
             const r = await authFetch(`${API}/api/report/${reportId}/pdf`);
             if (!r.ok) throw new Error('PDF generation failed');
             const blob = await r.blob();
-            const url  = URL.createObjectURL(blob);
-            const a    = document.createElement('a');
-            a.href     = url;
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
             a.download = `inscriptio_report_RPT${String(reportId).padStart(4, '0')}.pdf`;
             a.click();
             URL.revokeObjectURL(url);
@@ -236,7 +245,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           } catch {
             showToast('Could not generate PDF.', 'error');
           } finally {
-            pdfBtn.disabled    = false;
+            pdfBtn.disabled = false;
             pdfBtn.textContent = '⬇ Download PDF Report';
           }
         });
@@ -248,10 +257,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // Pre-fill verdict buttons if already validated
       if (data.verdict) {
-        document.getElementById('val-verify')?.classList.toggle('selected',   data.verdict === 'verify');
-        document.getElementById('val-disagree')?.classList.toggle('selected', data.verdict === 'disagree');
+        document
+          .getElementById('val-verify')
+          ?.classList.toggle('selected', data.verdict === 'verify');
+        document
+          .getElementById('val-disagree')
+          ?.classList.toggle('selected', data.verdict === 'disagree');
       }
-
     } catch (err) {
       showToast(`Could not load report: ${err.message}`, 'error');
     }
@@ -262,26 +274,34 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function setValidation(decision) {
     validationDecision = decision;
-    document.getElementById('val-verify')?.classList.toggle('selected',   decision === 'verify');
+    document.getElementById('val-verify')?.classList.toggle('selected', decision === 'verify');
     document.getElementById('val-disagree')?.classList.toggle('selected', decision === 'disagree');
 
-    if (!reportId) { showToast('No report loaded.', 'warning'); return; }
+    if (!reportId) {
+      showToast('No report loaded.', 'warning');
+      return;
+    }
 
     authFetch(`${API}/api/report/${reportId}/validate`, {
       method: 'POST',
-      body:   JSON.stringify({ decision }),
-    }).then(res => {
-      if (res.ok) showToast(decision === 'verify' ? 'Marked as Verified.' : 'Marked as Disagreed.', 'info');
-      else        showToast('Could not save validation.', 'error');
-    }).catch(() => showToast('Could not save validation.', 'error'));
+      body: JSON.stringify({ decision }),
+    })
+      .then((res) => {
+        if (res.ok)
+          showToast(decision === 'verify' ? 'Marked as Verified.' : 'Marked as Disagreed.', 'info');
+        else showToast('Could not save validation.', 'error');
+      })
+      .catch(() => showToast('Could not save validation.', 'error'));
   }
 
-  document.getElementById('val-verify')?.addEventListener('click',   () => setValidation('verify'));
-  document.getElementById('val-disagree')?.addEventListener('click', () => setValidation('disagree'));
+  document.getElementById('val-verify')?.addEventListener('click', () => setValidation('verify'));
+  document
+    .getElementById('val-disagree')
+    ?.addEventListener('click', () => setValidation('disagree'));
 
   // ── Notes autosave ────────────────────────────────────────
   const notesField = document.getElementById('educator-notes');
-  let notesTimer   = null;
+  let notesTimer = null;
 
   notesField?.addEventListener('input', () => {
     clearTimeout(notesTimer);
@@ -289,8 +309,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (!reportId) return;
       authFetch(`${API}/api/report/${reportId}/notes`, {
         method: 'PATCH',
-        body:   JSON.stringify({ notes: notesField.value }),
-      }).then(res => {
+        body: JSON.stringify({ notes: notesField.value }),
+      }).then((res) => {
         if (res.ok) showToast('Note auto-saved.', 'info');
       });
     }, 2000);
@@ -299,16 +319,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ── Save to history ───────────────────────────────────────
   document.getElementById('save-btn')?.addEventListener('click', async () => {
     if (isClinicianRole && !validationDecision) {
-      showToast('Please select Verify or Disagree before saving.', 'warning'); return;
+      showToast('Please select Verify or Disagree before saving.', 'warning');
+      return;
     }
-    if (!reportId) { showToast('No report loaded.', 'warning'); return; }
+    if (!reportId) {
+      showToast('No report loaded.', 'warning');
+      return;
+    }
 
     try {
       const res = await authFetch(`${API}/api/report/${reportId}/save`, {
         method: 'POST',
-        body:   JSON.stringify({
+        body: JSON.stringify({
           decision: validationDecision,
-          notes:    notesField?.value || null,
+          notes: notesField?.value || null,
         }),
       });
       if (!res.ok) throw new Error();
@@ -323,7 +347,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ── Discard ───────────────────────────────────────────────
   document.getElementById('discard-btn')?.addEventListener('click', () => {
     confirmModal(
-      'This report and all notes will be discarded and will not be saved to the student\'s record.',
+      "This report and all notes will be discarded and will not be saved to the student's record.",
       () => {
         sessionStorage.removeItem('current_report_id');
         showToast('Report discarded.', 'warning');

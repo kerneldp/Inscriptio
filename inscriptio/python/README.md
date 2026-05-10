@@ -229,7 +229,7 @@ http://localhost:5500/inscriptio/html/01_authentication_portal.html
 |---|---|---|
 | GET | `/api/students/:id/reports` | All reports for a student |
 | GET | `/api/students/:id/compare?report1_id=&report2_id=` | Side-by-side comparison |
-| GET | `/api/students/:id/trend` | Softmax scores over time |
+| GET | `/api/students/:id/trend` | Risk scores over time |
 
 ### History
 | Method | URL | Description |
