@@ -1,4 +1,4 @@
-<img width="171" height="64" alt="image" src="https://github.com/user-attachments/assets/39b67ca5-351d-4cd1-a845-f5cacfd21ef7" />
+<img width="112" height="43" alt="image" src="https://github.com/user-attachments/assets/4a406c0e-072f-486d-befe-4175e7b9834b" />
 
 ## 📝 AI-Powered Pre-Diagnostic Dysgraphia Screening Agent
 
@@ -23,3 +23,8 @@ Before running the scripts, ensure you have a compatible version of Python insta
 1. Open File Explorer and navigate to the root folder of the project (Inscriptio).
 2. Launch the application: Simply double-click the start.bat file.
 3. Alternatively, open Command Prompt, navigate to the folder, and run .\start.bat. 
+
+---
+
+### ✅ Go Signal Indicator
+<img width="297" height="41" alt="image" src="https://github.com/user-attachments/assets/3c52f788-ef68-4009-b549-53dda56f3624" />
