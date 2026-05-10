@@ -1,387 +1,621 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>inscriptio — XAI Report View</title>
-<link rel="stylesheet" href="../css/base.css">
-<link rel="stylesheet" href="../css/report.css">
-</head>
-<body class="report-page">
-
-<!-- ═══════════════════════════════════════════════
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>inscriptio — XAI Report View</title>
+    <link rel="stylesheet" href="../css/base.css" />
+    <link rel="stylesheet" href="../css/report.css" />
+  </head>
+  <body class="report-page">
+    <!-- ═══════════════════════════════════════════════
      LEFT SIDEBAR
 ═══════════════════════════════════════════════ -->
-<nav class="sidebar">
-  <div class="sidebar-brand">
-    <div class="brand-mark">
-      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2">
-        <path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
-      </svg>
-    </div>
-    <span class="brand-text">inscri<em>ptio</em></span>
-  </div>
-
-  <div class="nav">
-    <span class="nav-section-label">Main</span>
-    <div class="nav-item" data-page="dashboard"><span class="nav-icon">⊞</span> Dashboard</div>
-    <div class="nav-item" data-page="upload"><span class="nav-icon">↑</span> Upload</div>
-    <div class="nav-item active" data-page="report"><span class="nav-icon">⚡</span> Reports</div>
-
-    <span class="nav-section-label">Tools</span>
-    <div class="nav-item" data-page="dashboard"><span class="nav-icon">⟺</span> Compare</div>
-    <div class="nav-item" data-page="dashboard"><span class="nav-icon">☰</span> Archive</div>
-
-    <span class="nav-section-label">System</span>
-    <div class="nav-item" data-page="dashboard"><span class="nav-icon">⚙</span> Settings</div>
-    <div class="nav-item" data-page="dashboard"><span class="nav-icon">?</span> Help</div>
-  </div>
-
-  <div class="sidebar-footer">
-    <div class="user-chip">
-      <div class="avatar" id="sidebar-avatar">–</div>
-      <div class="user-info">
-        <div class="user-name" id="sidebar-name">Loading…</div>
-        <div class="user-role" id="sidebar-role">–</div>
+    <nav class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-mark">
+          <svg
+            viewBox="0 0 24 24"
+            width="18"
+            height="18"
+            fill="none"
+            stroke="#fff"
+            stroke-width="2"
+          >
+            <path
+              d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
+            />
+          </svg>
+        </div>
+        <span class="brand-text">inscri<em>ptio</em></span>
       </div>
-      <button id="logout-btn" title="Log out"
-        style="background:none;border:none;cursor:pointer;color:#4a5568;font-size:0.9rem;padding:4px;">
-        ⇥
-      </button>
-    </div>
-  </div>
-</nav>
 
-<!-- ═══════════════════════════════════════════════
-     MAIN CONTENT
-═══════════════════════════════════════════════ -->
-<div class="main report-main">
+      <div class="nav">
+        <span class="nav-section-label">Main</span>
+        <div class="nav-item" data-page="dashboard"><span class="nav-icon">⊞</span> Dashboard</div>
+        <div class="nav-item" data-page="upload"><span class="nav-icon">↑</span> Upload</div>
+        <div class="nav-item active" data-page="report">
+          <span class="nav-icon">⚡</span> Reports
+        </div>
 
-  <div class="topbar">
-    <div>
-      <h1 class="topbar-title">XAI Report</h1>
-      <div class="breadcrumb">
-        <a href="#" onclick="navigate('dashboard'); return false;">Dashboard</a>
-        <span>›</span>
-        <a href="#" onclick="navigate('report'); return false;">Reports</a>
-        <span>›</span>
-        <span>STU-001 — Jun 10, 2025</span>
+        <span class="nav-section-label">Tools</span>
+        <div class="nav-item" data-page="compare"><span class="nav-icon">⟺</span> Compare</div>
+        <div class="nav-item" data-page="dashboard"><span class="nav-icon">☰</span> Archive</div>
+
+        <span class="nav-section-label">System</span>
+        <div class="nav-item" data-page="dashboard"><span class="nav-icon">⚙</span> Settings</div>
+        <div class="nav-item" data-page="dashboard"><span class="nav-icon">?</span> Help</div>
       </div>
-    </div>
-    <!-- DEV NOTE: Status flag driven by risk score.
-         If confidence >= threshold (e.g. 0.65) → "Potential"; else "Low Potential".
-         Threshold configurable via GET /api/config. -->
-    <div class="status-flag potential" id="status-flag">🔴 Potential Dysgraphia</div>
-  </div>
 
-  <div class="content report-content">
-
-    <!-- ── Report meta bar ─────────────────────────────── -->
-    <!-- DEV NOTE: Populate from GET /api/report/:reportId →
-         { student, sessionDate, classId, confidence, label, reportId } -->
-    <div class="report-meta">
-      <div class="meta-avatar" id="meta-avatar">AA</div>
-      <div class="meta-info">
-        <div class="meta-name" id="meta-name">Ana Aquino</div>
-        <div class="meta-details">
-          <span id="meta-student-id"><em>ID</em> —</span>
-          <span id="meta-student-class"><em>Class</em> —</span>
-          <span id="meta-date"><em>Date</em> —</span>
-          <span id="meta-report-id"><em>Report</em> —</span>
+      <div class="sidebar-footer">
+        <div class="user-chip">
+          <div class="avatar" id="sidebar-avatar">–</div>
+          <div class="user-info">
+            <div class="user-name" id="sidebar-name">Loading…</div>
+            <div class="user-role" id="sidebar-role">–</div>
+          </div>
+          <button
+            id="logout-btn"
+            title="Log out"
+            style="
+              background: none;
+              border: none;
+              cursor: pointer;
+              color: #4a5568;
+              font-size: 0.9rem;
+              padding: 4px;
+            "
+          >
+            ⇥
+          </button>
         </div>
       </div>
-      <div class="confidence-display">
-        <div class="conf-label">Risk Score</div>
-        <!-- DEV NOTE: Replace with live risk score output from model inference. -->
-        <div class="conf-value high" id="conf-value">—</div>
-        <div class="conf-sub" id="conf-sub">—</div>
-      </div>
-    </div>
+    </nav>
 
-    <!-- ── 4-Panel grid ────────────────────────────────── -->
-    <!-- DEV NOTE: ALL 4 panels receive image data from GET /api/report/:reportId.
+    <!-- ═══════════════════════════════════════════════
+     MAIN CONTENT
+═══════════════════════════════════════════════ -->
+    <div class="main report-main">
+      <div class="topbar">
+        <div>
+          <h1 class="topbar-title">XAI Report</h1>
+          <div class="breadcrumb">
+            <a
+              href="#"
+              onclick="
+                navigate('dashboard');
+                return false;
+              "
+              >Dashboard</a
+            >
+            <span>›</span>
+            <a
+              href="#"
+              onclick="
+                navigate('report');
+                return false;
+              "
+              >Reports</a
+            >
+            <span>›</span>
+            <span>STU-001 — Jun 10, 2025</span>
+          </div>
+        </div>
+        <!-- DEV NOTE: Status flag driven by risk score.
+         If confidence >= threshold (e.g. 0.65) → "Potential"; else "Low Potential".
+         Threshold configurable via GET /api/config. -->
+        <div class="status-flag potential" id="status-flag">🔴 Potential Dysgraphia</div>
+      </div>
+
+      <div class="content report-content">
+        <!-- ── Report meta bar ─────────────────────────────── -->
+        <!-- DEV NOTE: Populate from GET /api/report/:reportId →
+         { student, sessionDate, classId, confidence, label, reportId } -->
+        <div class="report-meta">
+          <div class="meta-avatar" id="meta-avatar">AA</div>
+          <div class="meta-info">
+            <div class="meta-name" id="meta-name">Ana Aquino</div>
+            <div class="meta-details">
+              <span id="meta-student-id"><em>ID</em> —</span>
+              <span id="meta-student-class"><em>Class</em> —</span>
+              <span id="meta-date"><em>Date</em> —</span>
+              <span id="meta-report-id"><em>Report</em> —</span>
+            </div>
+          </div>
+          <div class="confidence-display">
+            <div class="conf-label">Risk Score</div>
+            <!-- DEV NOTE: Replace with live risk score output from model inference. -->
+            <div class="conf-value high" id="conf-value">—</div>
+            <div class="conf-sub" id="conf-sub">—</div>
+          </div>
+        </div>
+
+        <!-- ── 4-Panel grid ────────────────────────────────── -->
+        <!-- DEV NOTE: ALL 4 panels receive image data from GET /api/report/:reportId.
          Fields: { original_b64, shap_b64, gradcam_b64, metadata }.
          Replace placeholders with:
          <img src={`data:image/png;base64,${panel_b64}`}> in React. -->
-    <div class="dev-note" style="margin-bottom:16px;">
-      4-Panel grid — Replace placeholder visuals with base64 image data from GET /api/report/:reportId: original_b64, shap_b64, gradcam_b64, and metadata object.
-    </div>
-
-    <div class="panel-grid">
-
-      <!-- Panel 1: Original Handwriting -->
-      <div class="panel-card">
-        <div class="panel-header">
-          <div class="panel-num">1</div>
-          <span class="panel-title">Original Handwriting</span>
-          <span class="panel-badge badge-original">RAW</span>
+        <div class="dev-note" style="margin-bottom: 16px">
+          4-Panel grid — Replace placeholder visuals with base64 image data from GET
+          /api/report/:reportId: original_b64, shap_b64, gradcam_b64, and metadata object.
         </div>
-        <!-- DEV NOTE: Replace with <img> using original_b64 from report API. -->
-        <div class="panel-img" id="panel-original">
-          <div class="panel-placeholder-icon">🖊️</div>
-          <div class="panel-placeholder-text">Original uploaded<br>handwriting image<br>rendered here</div>
-        </div>
-      </div>
 
-      <!-- Panel 2: SHAP Heatmap -->
-      <div class="panel-card">
-        <div class="panel-header">
-          <div class="panel-num">2</div>
-          <span class="panel-title">SHAP Heatmap</span>
-          <span class="panel-badge badge-shap">XAI</span>
-        </div>
-        <!-- DEV NOTE: Replace with <img> using shap_b64 from report API.
+        <div class="panel-grid">
+          <!-- Panel 1: Original Handwriting -->
+          <div class="panel-card">
+            <div class="panel-header">
+              <div class="panel-num">1</div>
+              <span class="panel-title">Original Handwriting</span>
+              <span class="panel-badge badge-original">RAW</span>
+            </div>
+            <!-- DEV NOTE: Replace with <img> using original_b64 from report API. -->
+            <div class="panel-img" id="panel-original">
+              <div class="panel-placeholder-icon">🖊️</div>
+              <div class="panel-placeholder-text">
+                Original uploaded<br />handwriting image<br />rendered here
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel 2: SHAP Heatmap -->
+          <div class="panel-card">
+            <div class="panel-header">
+              <div class="panel-num">2</div>
+              <span class="panel-title">SHAP Heatmap</span>
+              <span class="panel-badge badge-shap">XAI</span>
+            </div>
+            <!-- DEV NOTE: Replace with <img> using shap_b64 from report API.
              Red = dysgraphia feature contribution. Blue = counter-evidence. -->
-        <div class="shap-mockup" id="panel-shap">
-          <div class="panel-placeholder-icon" style="color:rgba(255,255,255,0.7)">🔥</div>
-          <div class="panel-placeholder-text" style="color:rgba(255,255,255,0.6)">SHAP pixel<br>attribution map</div>
-          <div class="shap-legend">
-            <div class="legend-item">
-              <div class="legend-dot" style="background:#c0392b"></div>
-              High contribution
-            </div>
-            <div class="legend-item">
-              <div class="legend-dot" style="background:#1abc9c"></div>
-              Counter-evidence
+            <div class="shap-mockup" id="panel-shap">
+              <div class="panel-placeholder-icon" style="color: rgba(255, 255, 255, 0.7)">🔥</div>
+              <div class="panel-placeholder-text" style="color: rgba(255, 255, 255, 0.6)">
+                SHAP pixel<br />attribution map
+              </div>
+              <div class="shap-legend">
+                <div class="legend-item">
+                  <div class="legend-dot" style="background: #c0392b"></div>
+                  High contribution
+                </div>
+                <div class="legend-item">
+                  <div class="legend-dot" style="background: #1abc9c"></div>
+                  Counter-evidence
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- Panel 3: Grad-CAM -->
-      <div class="panel-card">
-        <div class="panel-header">
-          <div class="panel-num">3</div>
-          <span class="panel-title">Grad-CAM</span>
-          <span class="panel-badge badge-gradcam">SPATIAL</span>
-        </div>
-        <!-- DEV NOTE: Replace with <img> using gradcam_b64.
+          <!-- Panel 3: Grad-CAM -->
+          <div class="panel-card">
+            <div class="panel-header">
+              <div class="panel-num">3</div>
+              <span class="panel-title">Grad-CAM</span>
+              <span class="panel-badge badge-gradcam">SPATIAL</span>
+            </div>
+            <!-- DEV NOTE: Replace with <img> using gradcam_b64.
              Grad-CAM shows spatial focus regions of the convolutional layers. -->
-        <div class="gradcam-mockup" id="panel-gradcam">
-          <div style="text-align:center;">
-            <div class="panel-placeholder-icon" style="color:rgba(255,255,255,0.7)">📍</div>
-            <div class="panel-placeholder-text" style="color:rgba(255,255,255,0.7)">Grad-CAM spatial<br>localization overlay</div>
+            <div class="gradcam-mockup" id="panel-gradcam">
+              <div style="text-align: center">
+                <div class="panel-placeholder-icon" style="color: rgba(255, 255, 255, 0.7)">📍</div>
+                <div class="panel-placeholder-text" style="color: rgba(255, 255, 255, 0.7)">
+                  Grad-CAM spatial<br />localization overlay
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel 4: Severe Anomaly Focus -->
+          <div class="panel-card">
+            <div class="panel-header">
+              <div class="panel-num">4</div>
+              <span class="panel-title">Severe Anomaly Focus</span>
+              <span class="panel-badge badge-meta">FOCUS</span>
+            </div>
+            <div class="panel-img" id="panel-severe">
+              <div class="panel-placeholder-icon">🎯</div>
+              <div class="panel-placeholder-text">Top 10% SHAP zones<br />highlighted in red</div>
+            </div>
           </div>
         </div>
-      </div>
+        <!-- /.panel-grid -->
 
-      <!-- Panel 4: Severe Anomaly Focus -->
-      <div class="panel-card">
-        <div class="panel-header">
-          <div class="panel-num">4</div>
-          <span class="panel-title">Severe Anomaly Focus</span>
-          <span class="panel-badge badge-meta">FOCUS</span>
+        <!-- ── Metadata grid ────────────────────────────────── -->
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 12px 20px;
+            background: #fff;
+            border: 1px solid var(--rule);
+            border-radius: 12px;
+            margin-bottom: 16px;
+          "
+        >
+          <div style="display: flex; gap: 6px; align-items: baseline">
+            <span style="font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--ghost)"
+              >Label</span
+            >
+            <span
+              id="meta-label"
+              style="
+                font-family: 'DM Serif Display', serif;
+                font-size: 0.9rem;
+                font-weight: 600;
+                color: var(--danger);
+              "
+              >—</span
+            >
+          </div>
+
+          <div style="display: flex; gap: 6px; align-items: baseline">
+            <span style="font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--ghost)"
+              >Confidence</span
+            >
+            <span
+              id="meta-confidence"
+              style="
+                font-family: 'DM Serif Display', serif;
+                font-size: 0.9rem;
+                font-weight: 600;
+                color: var(--ink);
+              "
+              >—</span
+            >
+          </div>
+
+          <div style="display: flex; gap: 6px; align-items: baseline">
+            <span style="font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--ghost)"
+              >Model</span
+            >
+            <span
+              style="
+                font-family: 'DM Mono', monospace;
+                font-size: 0.8rem;
+                color: var(--ink);
+                font-weight: 500;
+              "
+              >MobileNetV3</span
+            >
+          </div>
+
+          <div style="display: flex; gap: 6px; align-items: baseline">
+            <span style="font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--ghost)"
+              >Input</span
+            >
+            <span
+              style="
+                font-family: 'DM Mono', monospace;
+                font-size: 0.8rem;
+                color: var(--ink);
+                font-weight: 500;
+              "
+              >224×224</span
+            >
+          </div>
+
+          <div style="display: flex; gap: 6px; align-items: baseline">
+            <span style="font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--ghost)"
+              >Pre-process</span
+            >
+            <span
+              style="
+                font-family: 'DM Mono', monospace;
+                font-size: 0.8rem;
+                color: var(--ink);
+                font-weight: 500;
+              "
+              >Otsu</span
+            >
+          </div>
+
+          <div style="display: flex; gap: 6px; align-items: baseline">
+            <span style="font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--ghost)"
+              >Validated</span
+            >
+            <span
+              id="meta-validated"
+              style="
+                font-family: 'DM Serif Display', serif;
+                font-size: 0.9rem;
+                font-weight: 600;
+                color: var(--amber);
+              "
+              >—</span
+            >
+          </div>
+
+          <div
+            style="
+              flex: 1;
+              min-width: 200px;
+              display: flex;
+              align-items: center;
+              gap: 12px;
+              margin-left: auto;
+            "
+          >
+            <span style="font-family: 'DM Mono', monospace; font-size: 0.65rem; color: var(--ghost)"
+              >0%</span
+            >
+            <div
+              class="conf-bar-track"
+              style="
+                flex: 1;
+                height: 8px;
+                background: var(--mist);
+                border-radius: 4px;
+                overflow: hidden;
+              "
+            >
+              <div
+                class="conf-bar-fill"
+                id="conf-bar-fill"
+                style="
+                  height: 100%;
+                  width: 0%;
+                  background: var(--danger);
+                  transition: width 0.6s ease;
+                "
+              ></div>
+            </div>
+            <span
+              id="conf-mid"
+              style="font-family: 'DM Mono', monospace; font-size: 0.65rem; color: var(--ghost)"
+              >—</span
+            >
+            <span style="font-family: 'DM Mono', monospace; font-size: 0.65rem; color: var(--ghost)"
+              >100%</span
+            >
+          </div>
         </div>
-        <div class="panel-img" id="panel-severe">
-          <div class="panel-placeholder-icon">🎯</div>
-          <div class="panel-placeholder-text">Top 10% SHAP zones<br>highlighted in red</div>
+
+        <!-- ── Probability Averaging ───────────────────────── -->
+        <div
+          id="prob-averaging-section"
+          style="
+            display: none;
+            margin-bottom: 16px;
+            background: var(--card);
+            border: 1px solid var(--rule);
+            border-radius: 12px;
+            overflow: hidden;
+          "
+        >
+          <div
+            style="
+              padding: 12px 18px;
+              border-bottom: 1px solid var(--rule);
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+            "
+          >
+            <span
+              style="font-family: 'DM Serif Display', serif; font-size: 1rem; color: var(--ink)"
+            >
+              Probability Averaging
+            </span>
+            <span
+              style="font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--ghost)"
+            >
+              Page-Level Synthesis
+            </span>
+          </div>
+          <div style="padding: 14px 18px">
+            <table
+              id="patch-table"
+              style="
+                width: 100%;
+                border-collapse: collapse;
+                font-family: 'DM Mono', monospace;
+                font-size: 0.78rem;
+              "
+            >
+              <thead>
+                <tr style="color: var(--ghost); border-bottom: 1px solid var(--rule)">
+                  <th style="text-align: left; padding: 6px 8px">Patch</th>
+                  <th style="text-align: left; padding: 6px 8px">PD Probability</th>
+                  <th style="text-align: left; padding: 6px 8px">Interpretation</th>
+                  <th style="text-align: left; padding: 6px 8px">Model Confidence</th>
+                </tr>
+              </thead>
+              <tbody id="patch-tbody"></tbody>
+            </table>
+            <div
+              id="avg-formula"
+              style="
+                margin-top: 12px;
+                padding: 10px 14px;
+                background: var(--mist);
+                border-radius: 8px;
+                font-family: 'DM Mono', monospace;
+                font-size: 0.78rem;
+                color: var(--ink);
+                line-height: 1.8;
+              "
+            ></div>
+            <div
+              id="page-diagnosis"
+              style="
+                margin-top: 10px;
+                font-family: 'DM Serif Display', serif;
+                font-size: 1.05rem;
+                color: var(--ink);
+              "
+            ></div>
+          </div>
+        </div>
+
+        <!-- ── Evidence-Based Findings ────────────────────── -->
+        <div
+          id="findings-section"
+          style="
+            display: none;
+            margin-bottom: 16px;
+            background: var(--card);
+            border: 1px solid var(--rule);
+            border-radius: 12px;
+            overflow: hidden;
+          "
+        >
+          <div style="padding: 12px 18px; border-bottom: 1px solid var(--rule)">
+            <span
+              style="font-family: 'DM Serif Display', serif; font-size: 1rem; color: var(--ink)"
+            >
+              Evidence-Based Findings
+            </span>
+          </div>
+          <div
+            id="findings-body"
+            style="
+              padding: 16px 18px;
+              font-size: 0.88rem;
+              color: var(--ink);
+              line-height: 1.8;
+              font-family: 'Figtree', sans-serif;
+            "
+          ></div>
+        </div>
+
+        <!-- ── PDF Download ────────────────────────────────── -->
+        <div style="margin-bottom: 24px">
+          <button
+            id="pdf-download-btn"
+            style="
+              display: none;
+              padding: 10px 22px;
+              background: var(--ink);
+              color: #fff;
+              border: none;
+              border-radius: 9px;
+              font-family: 'Figtree', sans-serif;
+              font-size: 0.85rem;
+              font-weight: 600;
+              cursor: pointer;
+              gap: 8px;
+              align-items: center;
+            "
+          >
+            ⬇ Download PDF Report
+          </button>
         </div>
       </div>
-
-    </div><!-- /.panel-grid -->
-
-    <!-- ── Metadata grid ────────────────────────────────── -->
-    <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 20px; padding: 12px 20px; background: #fff; border: 1px solid var(--rule); border-radius: 12px; margin-bottom: 16px;">
-
-      <div style="display: flex; gap: 6px; align-items: baseline;">
-        <span style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--ghost);">Label</span>
-        <span id="meta-label" style="font-family:'DM Serif Display',serif;font-size:0.9rem;font-weight:600;color:var(--danger);">—</span>
-      </div>
-
-      <div style="display: flex; gap: 6px; align-items: baseline;">
-        <span style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--ghost);">Confidence</span>
-        <span id="meta-confidence" style="font-family:'DM Serif Display',serif;font-size:0.9rem;font-weight:600;color:var(--ink);">—</span>
-      </div>
-
-      <div style="display: flex; gap: 6px; align-items: baseline;">
-        <span style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--ghost);">Model</span>
-        <span style="font-family:'DM Mono',monospace;font-size:0.8rem;color:var(--ink);font-weight:500;">MobileNetV3</span>
-      </div>
-
-      <div style="display: flex; gap: 6px; align-items: baseline;">
-        <span style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--ghost);">Input</span>
-        <span style="font-family:'DM Mono',monospace;font-size:0.8rem;color:var(--ink);font-weight:500;">224×224</span>
-      </div>
-
-      <div style="display: flex; gap: 6px; align-items: baseline;">
-        <span style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--ghost);">Pre-process</span>
-        <span style="font-family:'DM Mono',monospace;font-size:0.8rem;color:var(--ink);font-weight:500;">Otsu</span>
-      </div>
-
-      <div style="display: flex; gap: 6px; align-items: baseline;">
-        <span style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--ghost);">Validated</span>
-        <span id="meta-validated" style="font-family:'DM Serif Display',serif;font-size:0.9rem;font-weight:600;color:var(--amber);">—</span>
-      </div>
-
-      <div style="flex: 1; min-width: 200px; display: flex; align-items: center; gap: 12px; margin-left: auto;">
-        <span style="font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--ghost);">0%</span>
-        <div class="conf-bar-track" style="flex: 1; height: 8px; background: var(--mist); border-radius: 4px; overflow: hidden;">
-          <div class="conf-bar-fill" id="conf-bar-fill" style="height: 100%; width: 0%; background: var(--danger); transition: width 0.6s ease;"></div>
-        </div>
-        <span id="conf-mid" style="font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--ghost);">—</span>
-        <span style="font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--ghost);">100%</span>
-      </div>
-
+      <!-- /.content -->
     </div>
+    <!-- /.main -->
 
-    <!-- ── Probability Averaging ───────────────────────── -->
-    <div id="prob-averaging-section" style="display:none;margin-bottom:16px;
-         background:var(--card);border:1px solid var(--rule);border-radius:12px;overflow:hidden;">
-      <div style="padding:12px 18px;border-bottom:1px solid var(--rule);
-                  display:flex;align-items:center;justify-content:space-between;">
-        <span style="font-family:'DM Serif Display',serif;font-size:1rem;color:var(--ink);">
-          Probability Averaging
-        </span>
-        <span style="font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--ghost);">
-          Page-Level Synthesis
-        </span>
-      </div>
-      <div style="padding:14px 18px;">
-        <table id="patch-table" style="width:100%;border-collapse:collapse;
-               font-family:'DM Mono',monospace;font-size:0.78rem;">
-          <thead>
-            <tr style="color:var(--ghost);border-bottom:1px solid var(--rule);">
-              <th style="text-align:left;padding:6px 8px;">Patch</th>
-              <th style="text-align:left;padding:6px 8px;">PD Probability</th>
-              <th style="text-align:left;padding:6px 8px;">Interpretation</th>
-              <th style="text-align:left;padding:6px 8px;">Model Confidence</th>
-            </tr>
-          </thead>
-          <tbody id="patch-tbody"></tbody>
-        </table>
-        <div id="avg-formula" style="margin-top:12px;padding:10px 14px;
-             background:var(--mist);border-radius:8px;font-family:'DM Mono',monospace;
-             font-size:0.78rem;color:var(--ink);line-height:1.8;">
-        </div>
-        <div id="page-diagnosis" style="margin-top:10px;font-family:'DM Serif Display',serif;
-             font-size:1.05rem;color:var(--ink);"></div>
-      </div>
-    </div>
-
-    <!-- ── Evidence-Based Findings ────────────────────── -->
-    <div id="findings-section" style="display:none;margin-bottom:16px;
-         background:var(--card);border:1px solid var(--rule);border-radius:12px;overflow:hidden;">
-      <div style="padding:12px 18px;border-bottom:1px solid var(--rule);">
-        <span style="font-family:'DM Serif Display',serif;font-size:1rem;color:var(--ink);">
-          Evidence-Based Findings
-        </span>
-      </div>
-      <div id="findings-body" style="padding:16px 18px;font-size:0.88rem;color:var(--ink);
-           line-height:1.8;font-family:'Figtree',sans-serif;"></div>
-    </div>
-
-    <!-- ── PDF Download ────────────────────────────────── -->
-    <div style="margin-bottom:24px;">
-      <button id="pdf-download-btn" style="display:none;padding:10px 22px;
-        background:var(--ink);color:#fff;border:none;border-radius:9px;
-        font-family:'Figtree',sans-serif;font-size:0.85rem;font-weight:600;
-        cursor:pointer;gap:8px;align-items:center;">
-        ⬇ Download PDF Report
-      </button>
-    </div>
-
-  </div><!-- /.content -->
-</div><!-- /.main -->
-
-<!-- ═══════════════════════════════════════════════
+    <!-- ═══════════════════════════════════════════════
      RIGHT ACTION SIDEBAR
 ═══════════════════════════════════════════════ -->
-<div class="action-sidebar">
-  <div class="sidebar-top-strip"></div>
+    <div class="action-sidebar">
+      <div class="sidebar-top-strip"></div>
 
-  <!-- Clinician Validation -->
-  <div class="sidebar-section">
-    <div class="sidebar-section-title">Clinician Validation</div>
+      <!-- Clinician Validation -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Clinician Validation</div>
 
-    <!-- DEV NOTE: Shown ONLY when role === "clinician".
+        <!-- DEV NOTE: Shown ONLY when role === "clinician".
          report.js controls visibility from session role.
          POST /api/report/:reportId/validate { decision: "verify"|"disagree", clinicianId } -->
-    <div class="validation-row" id="validation-row" style="display:none;">
-      <div class="val-btn verify" id="val-verify">
-        <span class="val-btn-icon">✅</span>
-        <span class="val-btn-label">Verify</span>
+        <div class="validation-row" id="validation-row" style="display: none">
+          <div class="val-btn verify" id="val-verify">
+            <span class="val-btn-icon">✅</span>
+            <span class="val-btn-label">Verify</span>
+          </div>
+          <div class="val-btn disagree" id="val-disagree">
+            <span class="val-btn-icon">❌</span>
+            <span class="val-btn-label">Disagree</span>
+          </div>
+        </div>
+
+        <!-- Shown when role === "educator" -->
+        <div class="clinician-locked" id="clinician-locked" style="display: none">
+          🔒 Validation reserved for Clinicians only.<br />
+          Contact your assigned clinician to review this report.
+        </div>
+
+        <div class="dev-note" style="margin-top: 10px">
+          Visibility controlled by report.js based on session role. POST
+          /api/report/:reportId/validate { decision, clinicianId }.
+        </div>
       </div>
-      <div class="val-btn disagree" id="val-disagree">
-        <span class="val-btn-icon">❌</span>
-        <span class="val-btn-label">Disagree</span>
-      </div>
-    </div>
 
-    <!-- Shown when role === "educator" -->
-    <div class="clinician-locked" id="clinician-locked" style="display:none;">
-      🔒 Validation reserved for Clinicians only.<br>
-      Contact your assigned clinician to review this report.
-    </div>
-
-    <div class="dev-note" style="margin-top:10px;">
-      Visibility controlled by report.js based on session role. POST /api/report/:reportId/validate { decision, clinicianId }.
-    </div>
-  </div>
-
-  <!-- Educator Notes -->
-  <div class="sidebar-section">
-    <div class="sidebar-section-title">Educator Notes</div>
-    <!-- DEV NOTE: Pre-populate from report.educatorNote if record exists.
+      <!-- Educator Notes -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Educator Notes</div>
+        <!-- DEV NOTE: Pre-populate from report.educatorNote if record exists.
          Autosaves on 2s debounce. PATCH /api/report/:reportId { educatorNote } -->
-    <textarea class="notes-field" id="educator-notes"
-      placeholder="Add context about this session… e.g. Student was fatigued, written after recess, task was timed…"></textarea>
-    <div class="dev-note" style="margin-top:10px;">
-      PLACEHOLDER — Load existing note from report.educatorNote on mount. Autosave on 2s debounce. PATCH /api/report/:reportId with { educatorNote }.
-    </div>
-  </div>
+        <textarea
+          class="notes-field"
+          id="educator-notes"
+          placeholder="Add context about this session… e.g. Student was fatigued, written after recess, task was timed…"
+        ></textarea>
+        <div class="dev-note" style="margin-top: 10px">
+          PLACEHOLDER — Load existing note from report.educatorNote on mount. Autosave on 2s
+          debounce. PATCH /api/report/:reportId with { educatorNote }.
+        </div>
+      </div>
 
-  <!-- Save / Discard -->
-  <div class="sidebar-section">
-    <div class="sidebar-section-title">Commit to Record</div>
-    <!-- DEV NOTE: Save → POST /api/report/:reportId/save → writes to student permanent history.
+      <!-- Save / Discard -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Commit to Record</div>
+        <!-- DEV NOTE: Save → POST /api/report/:reportId/save → writes to student permanent history.
          Discard → abandon session (no write). Confirm discard with modal (handled in report.js). -->
-    <button class="save-btn" id="save-btn">💾 Save to Student History</button>
-    <button class="discard-btn" id="discard-btn">Discard This Report</button>
-    <p style="font-size:0.7rem;color:var(--ghost);margin-top:10px;
-              line-height:1.5;text-align:center;">
-      Saving commits this report and all validation notes to the student's permanent record.
-    </p>
-  </div>
+        <button class="save-btn" id="save-btn">💾 Save to Student History</button>
+        <button class="discard-btn" id="discard-btn">Discard This Report</button>
+        <p
+          style="
+            font-size: 0.7rem;
+            color: var(--ghost);
+            margin-top: 10px;
+            line-height: 1.5;
+            text-align: center;
+          "
+        >
+          Saving commits this report and all validation notes to the student's permanent record.
+        </p>
+      </div>
 
-  <!-- Audit Trail -->
-  <div class="sidebar-section">
-    <div class="sidebar-section-title">Audit Trail</div>
-    <!-- DEV NOTE: Populate from report metadata — reportId, timestamps, model version hash.
+      <!-- Audit Trail -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Audit Trail</div>
+        <!-- DEV NOTE: Populate from report metadata — reportId, timestamps, model version hash.
          Do not hardcode in production. GET /api/report/:reportId includes modelVersionHash. -->
-    <div class="audit-row">
-      <span class="audit-key">Report ID</span>
-      <span class="audit-val">#RPT-0041</span>
+        <div class="audit-row">
+          <span class="audit-key">Report ID</span>
+          <span class="audit-val">#RPT-0041</span>
+        </div>
+        <div class="audit-row">
+          <span class="audit-key">Generated</span>
+          <span class="audit-val">Jun 10, 2:14 PM</span>
+        </div>
+        <div class="audit-row">
+          <span class="audit-key">Model Hash</span>
+          <span class="audit-val">a3f8c21d</span>
+        </div>
+        <div class="audit-row">
+          <span class="audit-key">Uploaded by</span>
+          <span class="audit-val" id="audit-uploader">—</span>
+        </div>
+        <div class="dev-note" style="margin-top: 8px">
+          Replace with live data from GET /api/report/:reportId — include modelVersionHash for
+          traceability.
+        </div>
+      </div>
     </div>
-    <div class="audit-row">
-      <span class="audit-key">Generated</span>
-      <span class="audit-val">Jun 10, 2:14 PM</span>
-    </div>
-    <div class="audit-row">
-      <span class="audit-key">Model Hash</span>
-      <span class="audit-val">a3f8c21d</span>
-    </div>
-    <div class="audit-row">
-      <span class="audit-key">Uploaded by</span>
-      <span class="audit-val" id="audit-uploader">—</span>
-    </div>
-    <div class="dev-note" style="margin-top:8px;">
-      Replace with live data from GET /api/report/:reportId — include modelVersionHash for traceability.
-    </div>
-  </div>
+    <!-- /.action-sidebar -->
 
-</div><!-- /.action-sidebar -->
+    <script src="../js/app.js"></script>
+    <script src="../js/report.js"></script>
 
-<script src="../js/app.js"></script>
-<script src="../js/report.js"></script>
-
-<script>
-  // Populate audit uploader from session
-  document.addEventListener('DOMContentLoaded', () => {
-    const user = Session.get();
-    const uploaderEl = document.getElementById('audit-uploader');
-    if (user && uploaderEl) uploaderEl.textContent = user.name;
-  });
-</script>
-
-</body>
+    <script>
+      // Populate audit uploader from session
+      document.addEventListener('DOMContentLoaded', () => {
+        const user = Session.get();
+        const uploaderEl = document.getElementById('audit-uploader');
+        if (user && uploaderEl) uploaderEl.textContent = user.name;
+      });
+    </script>
+  </body>
 </html>
