@@ -348,7 +348,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('discard-btn')?.addEventListener('click', () => {
     confirmModal(
       "This report and all notes will be discarded and will not be saved to the student's record.",
-      () => {
+      async () => {
+        if (reportId) {
+          try {
+            await authFetch(`${API}/api/report/${reportId}`, { method: 'DELETE' });
+          } catch (err) {
+            console.error("Failed to delete report:", err);
+          }
+        }
         sessionStorage.removeItem('current_report_id');
         showToast('Report discarded.', 'warning');
         setTimeout(() => navigate('dashboard'), 800);

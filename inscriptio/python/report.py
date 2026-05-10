@@ -842,3 +842,19 @@ def download_report_pdf(
         media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+@router.delete("/{report_id}")
+def delete_report(
+    report_id: int,
+    db:    Session = Depends(get_db),
+    _user: dict    = Depends(get_current_user),
+):
+    r = db.query(Report).filter(Report.id == report_id, Report.is_deleted == False).first()
+    if not r:
+        raise HTTPException(status_code=404, detail="Report not found.")
+
+    r.is_deleted = True
+    r.delete_reason = "Discarded by user"
+    db.commit()
+    return {"report_id": report_id, "status": "deleted"}
