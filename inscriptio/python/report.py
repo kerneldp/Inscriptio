@@ -472,7 +472,7 @@ async def analyze(
         path  = UPLOADS_DIR / fname
         with open(path, "wb") as f:
             f.write(base64.b64decode(b64_str))
-        return str(path)
+        return f"uploads/{fname}"
 
     orig_path          = save_img_b64(result["original_b64"],       "original")
     gradcam_path       = save_img_b64(result["gradcam_b64"],        "gradcam")
@@ -529,9 +529,11 @@ def get_report(
         raise HTTPException(status_code=404, detail="Report not found.")
 
     def load_b64(path: str):
-        if path and os.path.exists(path):
-            with open(path, "rb") as f:
-                return base64.b64encode(f.read()).decode()
+        if path:
+            full_path = Path(__file__).parent / path if not os.path.isabs(path) else Path(path)
+            if full_path.exists():
+                with open(full_path, "rb") as f:
+                    return base64.b64encode(f.read()).decode()
         return None
 
     student = db.query(Student).filter(Student.id == r.student_id).first()
@@ -745,8 +747,10 @@ def download_report_pdf(
     image_paths = []
     for attr, title in panels:
         img_path = getattr(r, attr, None)
-        if img_path and os.path.exists(img_path):
-            image_paths.append((img_path, title))
+        if img_path:
+            full_path = Path(__file__).parent / img_path if not os.path.isabs(img_path) else Path(img_path)
+            if full_path.exists():
+                image_paths.append((str(full_path), title))
 
     if image_paths:
         pdf.add_page()

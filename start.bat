@@ -3,7 +3,7 @@ title Inscriptio Launcher
 echo   Initiating Inscriptio Launch Sequence (Windows)
 
 echo.
-echo [1/6] Checking Python compatibility...
+echo [1/5] Checking Python compatibility...
 python -c "import sys; major, minor = sys.version_info[:2]; sys.exit(0 if major == 3 and 9 <= minor <= 11 else 1)" >nul 2>&1
 if %ERRORLEVEL% NEQ 0 (
     echo [X] ERROR: Incompatible or missing Python version.
@@ -21,7 +21,7 @@ if %ERRORLEVEL% NEQ 0 (
 echo [OK] Valid Python version found.
 
 echo.
-echo [2/6] Preparing Virtual Environment...
+echo [2/5] Preparing Virtual Environment...
 if not exist ".venv\" (
     echo [!] Creating new virtual environment...
     python -m venv .venv
@@ -29,17 +29,11 @@ if not exist ".venv\" (
 call .venv\Scripts\activate
 
 echo.
-echo [3/6] Checking and Installing Dependencies...
+echo [3/5] Checking and Installing Dependencies...
 pip install --prefer-binary -r inscriptio\python\requirements.txt
 
 echo.
-echo [4/6] Seeding Database...
-cd inscriptio\python
-python seed.py
-cd ..\..
-
-echo.
-echo [5/6] Starting Servers...
+echo [4/5] Starting Servers...
 :: Opens a new terminal window specifically for the Frontend
 start "Inscriptio Frontend (Port 5500)" cmd /k "call .venv\Scripts\activate && python -m http.server 5500"
 
@@ -47,7 +41,7 @@ start "Inscriptio Frontend (Port 5500)" cmd /k "call .venv\Scripts\activate && p
 start "Inscriptio Backend API (Port 8000)" cmd /k "cd inscriptio\python && call ..\..\.venv\Scripts\activate && python -m uvicorn main:app --reload --port 8000"
 
 echo.
-echo [6/6] Launching Application...
+echo [5/5] Launching Application...
 echo Waiting 5 seconds for the ML model to load...
 timeout /t 5 /nobreak >nul
 

@@ -49,13 +49,8 @@ source .venv/bin/activate
 echo "Checking and installing dependencies..."
 pip install --prefer-binary -r inscriptio/python/requirements.txt
 
-# 4. Seed the database
-echo "Seeding database..."
-cd inscriptio/python
-python seed.py
-cd ../.. # Go back to root
 
-# 5. Trap Ctrl+C to cleanly shut down both servers at once
+# 4. Trap Ctrl+C to cleanly shut down both servers at once
 cleanup() {
     echo ""
     echo "Shutting down Inscriptio servers..."
@@ -63,16 +58,16 @@ cleanup() {
 }
 trap cleanup EXIT
 
-# 6. Start the Frontend Server (The '&' runs it concurrently)
+# 5. Start the Frontend Server (The '&' runs it concurrently)
 echo "Starting Frontend Server (Port 5500)..."
 python3 -m http.server 5500 &
 
-# 7. Start the Backend API (The '&' runs it concurrently)
+# 6. Start the Backend API (The '&' runs it concurrently)
 echo "Starting Backend API (Port 8000)..."
 cd inscriptio/python
 python -m uvicorn main:app --reload --port 8000 &
 
-# 8. Wait 3 seconds for the ML model to load, then open the browser
+# 7. Wait 3 seconds for the ML model to load, then open the browser
 sleep 3
 echo "Opening Inscriptio..."
 open "http://localhost:5500/inscriptio/html/01_authentication_portal.html"

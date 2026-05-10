@@ -1,13 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from database import engine, Base, ensure_schema
+from database import engine, Base
 from settings import settings
 import models
 
 # Create all tables on startup
 Base.metadata.create_all(bind=engine)
-ensure_schema()
 
 # Import routers after table creation (avoids circular-import issues)
 from auth import router as auth_router

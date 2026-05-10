@@ -12,9 +12,12 @@ router = APIRouter(prefix="/api", tags=["Progress & Comparison"])
 
 
 def _load_b64(path: Optional[str]) -> Optional[str]:
-    if path and os.path.exists(path):
-        with open(path, "rb") as f:
-            return base64.b64encode(f.read()).decode()
+    if path:
+        from pathlib import Path
+        full_path = Path(__file__).parent / path if not os.path.isabs(path) else Path(path)
+        if full_path.exists():
+            with open(full_path, "rb") as f:
+                return base64.b64encode(f.read()).decode()
     return None
 
 
