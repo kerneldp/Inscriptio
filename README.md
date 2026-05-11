@@ -13,6 +13,19 @@ Before running the scripts, ensure you have a compatible version of Python insta
 
 ---
 
+### 🗄️ Database Setup (MySQL)
+This application requires a MySQL database.
+1. Install and start a local server environment like **WAMP** (Windows), **MAMP** (Mac), or **XAMPP**.
+2. Open phpMyAdmin (or your preferred MySQL client) and create a new database named `inscriptio_db`.
+3. Import the `inscriptio/inscriptio_db.sql` file into the newly created `inscriptio_db` database.
+4. Open the `inscriptio/python/.env` file and ensure the correct `DATABASE_URL` is uncommented based on your environment:
+   * **Mac (MAMP default port 8889):** Use the URL with port `8889`.
+   * **Windows/Linux (WAMP/XAMPP default port 3306):** Use the URL with port `3306`. 
+   *(Note: WAMP/XAMPP often uses an empty password by default, so you may need to change `root:root` to `root:@`)*.
+
+
+---
+
 ### 🍏💻 Mac & Linux Instructions
 1. Open your **Terminal**.
 2. Navigate to the root folder of the project (`Inscriptio`).
