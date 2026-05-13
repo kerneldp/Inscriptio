@@ -443,11 +443,16 @@ async def analyze(
     file:         UploadFile = File(...),
     student_id:   int        = Form(...),
     session_date: str        = Form(default=None),
+    educator_context: Optional[str] = Form(default=None),
+    urgent_review: str = Form(default="false"),
     db:           Session    = Depends(get_db),
     current_user: dict       = Depends(get_current_user),
 ):
     if not session_date:
         session_date = datetime.utcnow().strftime("%Y-%m-%d")
+
+    ctx = (educator_context or "").strip() or None
+    urgent = str(urgent_review).lower() in ("1", "true", "yes", "on")
 
     student = db.query(Student).filter(Student.id == student_id).first()
     if not student:
@@ -495,6 +500,9 @@ async def analyze(
         session_date       = session_date,
         patch_scores       = json.dumps(result["patch_breakdown"]),
         findings           = result["findings"],
+        educator_context   = ctx,
+        notes              = ctx,
+        urgent_review      = urgent,
     )
     db.add(report)
     db.commit()
@@ -538,6 +546,23 @@ def get_report(
 
     student = db.query(Student).filter(Student.id == r.student_id).first()
 
+    def load_gray(path: str):
+        if not path:
+            return None
+        full_path = Path(__file__).parent / path if not os.path.isabs(path) else Path(path)
+        if not full_path.exists():
+            return None
+        raw = np.frombuffer(full_path.read_bytes(), dtype=np.uint8)
+        return cv2.imdecode(raw, cv2.IMREAD_GRAYSCALE)
+
+    gray_src = load_gray(r.original_img)
+    otsu_b64 = None
+    if gray_src is not None:
+        try:
+            otsu_b64 = ndarray_to_b64(otsu_binarize(gray_src))
+        except Exception:
+            otsu_b64 = None
+
     # Parse patch_scores JSON safely
     try:
         patch_breakdown = json.loads(r.patch_scores) if r.patch_scores else []
@@ -553,11 +578,16 @@ def get_report(
         "softmax_score":      r.softmax_score,
         "verdict":            r.verdict,
         "notes":              r.notes,
+        "educator_context_display": (r.educator_context or r.notes) or "",
+        "clinician_notes":    r.clinician_notes,
+        "override_category":  r.override_category,
+        "urgent_review":      bool(getattr(r, "urgent_review", False)),
         "session_date":       r.session_date,
         "created_at":         r.created_at.isoformat(),
         "findings":           r.findings,
         "patch_breakdown":    patch_breakdown,
         "original_b64":       load_b64(r.original_img),
+        "otsu_binarized_b64": otsu_b64,
         "gradcam_b64":        load_b64(r.gradcam_img),
         "shap_b64":           load_b64(r.shap_img),
         "severe_anomaly_b64": load_b64(r.severe_anomaly_img),
@@ -597,6 +627,7 @@ def update_notes(
         raise HTTPException(status_code=404, detail="Report not found.")
 
     r.notes = data.notes
+    r.educator_context = data.notes
     db.commit()
     return {"report_id": report_id, "notes": r.notes}
 
@@ -812,14 +843,32 @@ def download_report_pdf(
         pdf.multi_cell(0, 6, r.findings)
         pdf.ln(4)
 
-    # Educator notes
-    if r.notes:
+    # Educator context (upload)
+    edu_ctx = (getattr(r, "educator_context", None) or r.notes or "").strip()
+    if edu_ctx:
         pdf.set_font("Helvetica", "B", 10)
         pdf.set_text_color(15, 23, 42)
-        pdf.cell(0, 6, "Educator Notes", ln=True)
+        pdf.cell(0, 6, "Educator Context", ln=True)
         pdf.set_font("Helvetica", "", 10)
         pdf.set_text_color(51, 65, 85)
-        pdf.multi_cell(0, 6, r.notes)
+        pdf.multi_cell(0, 6, edu_ctx)
+        pdf.ln(4)
+
+    # Clinician adjudication
+    cn = (getattr(r, "clinician_notes", None) or "").strip()
+    if cn or r.verdict:
+        pdf.set_font("Helvetica", "B", 10)
+        pdf.set_text_color(15, 23, 42)
+        pdf.cell(0, 6, "Clinician Adjudication", ln=True)
+        pdf.set_font("Helvetica", "", 10)
+        pdf.set_text_color(51, 65, 85)
+        if r.verdict:
+            pdf.cell(0, 6, f"Verdict: {verdict_text}", ln=True)
+        oc = getattr(r, "override_category", None)
+        if oc:
+            pdf.cell(0, 6, f"Override category: {oc}", ln=True)
+        if cn:
+            pdf.multi_cell(0, 6, cn)
         pdf.ln(4)
 
     # Audit trail

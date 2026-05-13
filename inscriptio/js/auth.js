@@ -89,7 +89,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       Session.save({ ...data.user, token: data.token });
       showToast(`Welcome back, ${data.user.name}!`, 'success');
-      setTimeout(() => navigate('dashboard'), 600);
+      const dest = data.user.role === 'clinician' ? 'clinician' : 'dashboard';
+      setTimeout(() => navigate(dest), 600);
 
     } catch {
       showError('Cannot connect to server. Make sure the backend is running.');

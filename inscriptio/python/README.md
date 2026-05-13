@@ -210,9 +210,9 @@ http://localhost:5500/inscriptio/html/01_authentication_portal.html
 ### Dashboard
 | Method | URL | Description |
 |---|---|---|
-| GET | `/api/dashboard/summary` | Summary cards data |
+| GET | `/api/stats/summary` | Summary cards data |
 | GET | `/api/students?search=` | Student directory |
-| GET | `/api/activity/recent` | Latest 4 reports |
+| GET | `/api/activity/recent` | Recent reports; query `week_only` (default `true`, UTC ISO week), `limit` (1–500) |
 
 ### Report & ML Pipeline
 | Method | URL | Description |
@@ -221,8 +221,14 @@ http://localhost:5500/inscriptio/html/01_authentication_portal.html
 | POST | `/api/report/analyze` | Run MobileNetV3 + Grad-CAM + SHAP |
 | GET | `/api/report/{report_id}` | Fetch saved report |
 | POST | `/api/report/{report_id}/validate` | Clinician verify/disagree |
-| PATCH | `/api/report/{report_id}/notes` | Autosave educator notes |
+| PATCH | `/api/report/{report_id}/notes` | Autosave educator notes (syncs `educator_context`) |
 | POST | `/api/report/{report_id}/save` | Commit to student history |
+
+### Clinician workspace
+| Method | URL | Description |
+|---|---|---|
+| GET | `/api/clinician/queue` | Pending reports, prioritized (urgent flag, severity ≥80%, score, FIFO) |
+| POST | `/api/clinician/report/{report_id}/adjudicate` | Body: `verdict` (`verify` \| `disagree`), `clinician_notes`, optional `override_category` (required if `disagree`) |
 
 ### Progress & Comparison
 | Method | URL | Description |
@@ -314,6 +320,7 @@ python/
 ├── report.py        ← ML pipeline endpoints
 ├── progress.py      ← Progress & comparison
 ├── history.py       ← History management
+├── clinician.py     ← Clinician queue & adjudication
 ├── settings.py      ← Environment config
 ├── seed.py          ← Database seeding script
 ├── requirements.txt ← Python packages

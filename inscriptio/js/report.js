@@ -253,7 +253,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // Pre-fill notes if already saved
       const notesField = document.getElementById('educator-notes');
-      if (notesField && data.notes) notesField.value = data.notes;
+      if (notesField) notesField.value = data.educator_context_display || data.notes || '';
 
       // Pre-fill verdict buttons if already validated
       if (data.verdict) {

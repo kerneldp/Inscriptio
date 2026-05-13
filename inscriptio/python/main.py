@@ -8,12 +8,16 @@ import models
 # Create all tables on startup
 Base.metadata.create_all(bind=engine)
 
+from database import migrate_schema
+migrate_schema()
+
 # Import routers after table creation (avoids circular-import issues)
 from auth import router as auth_router
 from dashboard import router as dashboard_router
 from progress import router as progress_router
 from history import router as history_router
 from report import router as report_router
+from clinician import router as clinician_router
 
 app = FastAPI(
     title=settings.api_title,
@@ -36,6 +40,7 @@ app.include_router(dashboard_router)
 app.include_router(progress_router)
 app.include_router(history_router)
 app.include_router(report_router)
+app.include_router(clinician_router)
 
 
 @app.get("/")

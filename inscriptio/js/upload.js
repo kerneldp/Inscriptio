@@ -159,6 +159,10 @@ document.addEventListener('DOMContentLoaded', () => {
       form.append('file',       selectedFile);
       form.append('student_id', sel.value);
       form.append('session_date', new Date().toISOString().split('T')[0]);
+      const ctx = document.getElementById('upload-educator-context')?.value?.trim() || '';
+      if (ctx) form.append('educator_context', ctx);
+      const urgent = document.getElementById('upload-urgent')?.checked;
+      form.append('urgent_review', urgent ? 'true' : 'false');
 
       const res  = await authFetchForm(`${API}/api/report/analyze`, form);
       const data = await res.json();

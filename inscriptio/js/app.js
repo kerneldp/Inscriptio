@@ -27,6 +27,7 @@ const Pages = {
   report:   '04_hxai_report_view.html',
   compare:  '05_progress_comparison.html',
   archive:  '06_history_archive.html',
+  clinician:'07_clinician_workspace.html',
 };
 
 function navigate(page) {

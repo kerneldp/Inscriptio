@@ -39,15 +39,18 @@ CREATE TABLE `reports` (
   `findings` text,
   `softmax_score` float DEFAULT NULL,
   `label` varchar(50) DEFAULT NULL,
+  `educator_context` text DEFAULT NULL,
+  `urgent_review` tinyint(1) NOT NULL DEFAULT 0,
   `validated_by` int DEFAULT NULL,
   `verdict` varchar(50) DEFAULT NULL,
   `notes` text,
+  `clinician_notes` text DEFAULT NULL,
+  `override_category` varchar(120) DEFAULT NULL,
   `session_date` varchar(20) DEFAULT NULL,
   `is_deleted` tinyint(1) DEFAULT '0',
   `delete_reason` text,
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
 --
 -- Dumping data for table `reports`
 --

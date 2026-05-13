@@ -52,10 +52,16 @@ class Report(Base):
     softmax_score = Column(Float,  nullable=True)
     label         = Column(String(50), nullable=True)   # "Potential" | "Low Potential"
 
+    # Educator context at upload (also mirrored into notes for legacy PDF/report view)
+    educator_context = Column(Text, nullable=True)
+    urgent_review    = Column(Boolean, default=False)
+
     # Clinician validation
-    validated_by = Column(Integer, nullable=True)
-    verdict      = Column(String(50), nullable=True)    # "verify" | "disagree"
-    notes        = Column(Text,   nullable=True)
+    validated_by      = Column(Integer, nullable=True)
+    verdict           = Column(String(50), nullable=True)    # "verify" | "disagree"
+    notes             = Column(Text,   nullable=True)        # legacy / educator autosave (synced with educator_context)
+    clinician_notes   = Column(Text, nullable=True)          # official HITL observation to educator
+    override_category = Column(String(120), nullable=True)   # required when verdict == disagree
 
     # Session metadata (used for progress comparison)
     session_date = Column(String(20), nullable=True)  # YYYY-MM-DD

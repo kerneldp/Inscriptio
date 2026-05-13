@@ -248,9 +248,13 @@
           </div>
 
           <div class="field-group">
-            <span class="field-label">Educator Note (Optional)</span>
-            <textarea class="field-input" rows="3" style="resize:vertical;"
-              placeholder="e.g. Student was fatigued; written after recess…"></textarea>
+            <span class="field-label">Educator context for clinician (optional)</span>
+            <textarea class="field-input" id="upload-educator-context" rows="3" style="resize:vertical;"
+              placeholder="e.g. Student was gripping the pencil unusually tight today…"></textarea>
+          </div>
+          <div class="field-group" style="display:flex;align-items:center;gap:10px;">
+            <input type="checkbox" id="upload-urgent" name="upload-urgent" style="width:auto;">
+            <label for="upload-urgent" style="margin:0;font-size:0.88rem;color:var(--slate);cursor:pointer;">Flag as urgent review for clinician queue</label>
           </div>
         </div>
       </div>
