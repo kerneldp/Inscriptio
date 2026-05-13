@@ -56,8 +56,7 @@
   </div>
 
   <div class="sidebar-footer">
-    <div class="user-chip">
-      <!-- DEV NOTE: Populated by comparison.js from session -->
+      <div class="user-chip">
       <div class="avatar" id="sidebar-avatar">–</div>
       <div class="user-info">
         <div class="user-name" id="sidebar-name">Loading…</div>
@@ -98,13 +97,6 @@
           <div class="select-wrap">
             <select class="field-select" id="student-select" placeholder="Choose a student">
               <option value="">— Select a student —</option>
-              <!-- DEV NOTE: Populate this with GET /api/students -->
-              <!-- PLACEHOLDER: Backend developers should fetch and populate this list -->
-              <option value="STU-001">Ana Aquino (#STU-001)</option>
-              <option value="STU-002">Ben Lim (#STU-002)</option>
-              <option value="STU-003">Cara Maño (#STU-003)</option>
-              <option value="STU-004">Diego Santos (#STU-004)</option>
-              <option value="STU-005">Elena Villanueva (#STU-005)</option>
             </select>
           </div>
         </div>
@@ -114,8 +106,6 @@
           <div class="select-wrap">
             <select class="field-select" id="date-select-1" disabled>
               <option value="">— Select a date —</option>
-              <!-- DEV NOTE: Populate this with GET /api/reports?studentId={studentId} -->
-              <!-- PLACEHOLDER: Dates will be fetched based on student selection -->
             </select>
           </div>
         </div>
@@ -125,8 +115,6 @@
           <div class="select-wrap">
             <select class="field-select" id="date-select-2" disabled>
               <option value="">— Select a date —</option>
-              <!-- DEV NOTE: Populate this with GET /api/reports?studentId={studentId} -->
-              <!-- PLACEHOLDER: Dates will be fetched based on student selection -->
             </select>
           </div>
         </div>
@@ -148,21 +136,7 @@
             <div class="panel-title">Baseline Report</div>
             <div class="panel-date" id="panel-1-date">—</div>
           </div>
-          <div class="panel-content" id="panel-1-content">
-            <!-- DEV NOTE: Fetch from GET /api/reports/{reportId} -->
-            <!-- PLACEHOLDER: Populate with student data from selected baseline report -->
-            <!-- Display fields: confidence score, key features, dysgraphia indicators -->
-            <div class="panel-placeholder">
-              <p>Confidence Score: <span class="placeholder-value">87.4%</span></p>
-              <p>Key Features Detected:</p>
-              <ul style="margin-left: 20px; margin-top: 8px;">
-                <li>Feature 1</li>
-                <li>Feature 2</li>
-                <li>Feature 3</li>
-              </ul>
-              <p style="margin-top: 12px;">Dysgraphia Risk Level: <span class="risk-badge high">High</span></p>
-            </div>
-          </div>
+          <div class="panel-content" id="panel-1-content"></div>
         </div>
 
         <!-- Right Panel -->
@@ -171,47 +145,34 @@
             <div class="panel-title">Current Report</div>
             <div class="panel-date" id="panel-2-date">—</div>
           </div>
-          <div class="panel-content" id="panel-2-content">
-            <!-- DEV NOTE: Fetch from GET /api/reports/{reportId} -->
-            <!-- PLACEHOLDER: Populate with student data from selected current report -->
-            <!-- Display fields: confidence score, key features, dysgraphia indicators -->
-            <div class="panel-placeholder">
-              <p>Confidence Score: <span class="placeholder-value">72.1%</span></p>
-              <p>Key Features Detected:</p>
-              <ul style="margin-left: 20px; margin-top: 8px;">
-                <li>Feature 1 (Improved)</li>
-                <li>Feature 2</li>
-              </ul>
-              <p style="margin-top: 12px;">Dysgraphia Risk Level: <span class="risk-badge medium">Medium</span></p>
-            </div>
-          </div>
+          <div class="panel-content" id="panel-2-content"></div>
         </div>
       </div>
 
       <!-- Improvement Summary -->
       <div class="improvement-summary">
-        <div class="summary-item positive">
-          <div class="summary-icon">↓</div>
+        <div class="summary-item neutral" id="summary-confidence-card">
+          <div class="summary-icon" id="summary-confidence-icon">→</div>
           <div class="summary-text">
-            <div class="summary-label">Confidence Improvement</div>
-            <div class="summary-value">-15.3%</div>
-            <div class="summary-desc">Lower confidence = Improved predictions</div>
+            <div class="summary-label">Confidence change</div>
+            <div class="summary-value" id="summary-confidence-value">—</div>
+            <div class="summary-desc" id="summary-confidence-desc">Change in model confidence (baseline → current).</div>
           </div>
         </div>
-        <div class="summary-item neutral">
-          <div class="summary-icon">→</div>
+        <div class="summary-item neutral" id="summary-features-card">
+          <div class="summary-icon" id="summary-features-icon">→</div>
           <div class="summary-text">
-            <div class="summary-label">Features Reduced</div>
-            <div class="summary-value">1 of 3</div>
-            <div class="summary-desc">One identified dysgraphia feature no longer detected</div>
+            <div class="summary-label">Patch-level PD signals</div>
+            <div class="summary-value" id="summary-features-value">—</div>
+            <div class="summary-desc" id="summary-features-desc">Fewer elevated patch scores in the current report suggests less localized PD emphasis.</div>
           </div>
         </div>
-        <div class="summary-item">
-          <div class="summary-icon">⧖</div>
+        <div class="summary-item" id="summary-period-card">
+          <div class="summary-icon" id="summary-period-icon">⧖</div>
           <div class="summary-text">
-            <div class="summary-label">Analysis Period</div>
-            <div class="summary-value">45 days</div>
-            <div class="summary-desc">Time between baseline and current assessment</div>
+            <div class="summary-label">Analysis period</div>
+            <div class="summary-value" id="summary-period-value">—</div>
+            <div class="summary-desc" id="summary-period-desc">Calendar span between the two selected session dates.</div>
           </div>
         </div>
       </div>

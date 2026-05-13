@@ -6,6 +6,7 @@ import json
 
 from database import get_db
 from models import Report, Student
+from auth import get_current_user
 
 router = APIRouter(prefix="/api/history", tags=["History Management"])
 
@@ -24,15 +25,20 @@ class BulkExportRequest(BaseModel):
 @router.get("")
 def get_history(
     date: Optional[str] = Query(default=None, description="Filter by date YYYY-MM-DD"),
+    student_id: Optional[int] = Query(default=None, description="Filter by student id"),
     student_class: Optional[str] = Query(default=None, description="Filter by class"),
     label: Optional[str] = Query(default=None, description="'Potential' or 'Low Potential'"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _user: dict = Depends(get_current_user),
 ):
     query = (
         db.query(Report, Student)
         .join(Student, Report.student_id == Student.id)
         .filter(Report.is_deleted != True)
     )
+
+    if student_id is not None:
+        query = query.filter(Report.student_id == student_id)
 
     if date:
         # Prefer filtering on session_date (PDF spec), fallback to created_at for older rows
@@ -56,7 +62,8 @@ def get_history(
                 "label": r.label,
                 "softmax_score": r.softmax_score,
                 "verdict": r.verdict,
-                "created_at": r.created_at.isoformat()
+                "session_date": r.session_date,
+                "created_at": r.created_at.isoformat(),
             }
             for r, s in results
         ]
@@ -66,7 +73,11 @@ def get_history(
 # POST /api/history/export
 # Bulk export selected records (returns data for PDF generation)
 @router.post("/export")
-def export_records(data: BulkExportRequest, db: Session = Depends(get_db)):
+def export_records(
+    data: BulkExportRequest,
+    db: Session = Depends(get_db),
+    _user: dict = Depends(get_current_user),
+):
     if not data.record_ids:
         raise HTTPException(status_code=400, detail="No record IDs provided")
 
@@ -107,7 +118,11 @@ def export_records(data: BulkExportRequest, db: Session = Depends(get_db)):
 # DELETE /api/history/bulk
 # Soft delete with required reason (maintains audit trail)
 @router.delete("/bulk")
-def bulk_delete(data: BulkDeleteRequest, db: Session = Depends(get_db)):
+def bulk_delete(
+    data: BulkDeleteRequest,
+    db: Session = Depends(get_db),
+    _user: dict = Depends(get_current_user),
+):
     if not data.record_ids:
         raise HTTPException(status_code=400, detail="No record IDs provided")
 

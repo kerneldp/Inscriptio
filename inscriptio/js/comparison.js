@@ -10,6 +10,56 @@
 
 const API = 'http://localhost:8000';
 
+/** YYYY-MM-DD from session_date or created_at ISO; compare as UTC midnight. */
+function parseReportUtcDay(iso) {
+  if (iso == null || iso === '') return null;
+  const part = String(iso).trim().split('T')[0];
+  const m = part.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return null;
+  return Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+}
+
+/** When API omits `summary` (older server), derive the same metrics from report payloads. */
+function synthesizeCompareSummary(report1, report2) {
+  if (!report1 || !report2) return null;
+  const s0 = report1.softmax_score;
+  const s1 = report2.softmax_score;
+  let confidence_delta_percent_points = null;
+  if (s0 != null && s1 != null) {
+    confidence_delta_percent_points = Math.round((Number(s1) - Number(s0)) * 1000) / 10;
+  }
+  const b0 = report1.flagged_patch_count != null ? Number(report1.flagged_patch_count) : 0;
+  const c1 = report2.flagged_patch_count != null ? Number(report2.flagged_patch_count) : 0;
+  const patches_resolved = Math.max(0, b0 - c1);
+  const t0 = report1.patch_count != null ? Number(report1.patch_count) : 0;
+  const t1 = report2.patch_count != null ? Number(report2.patch_count) : 0;
+  const d0 = parseReportUtcDay(report1.session_date || report1.created_at);
+  const d1 = parseReportUtcDay(report2.session_date || report2.created_at);
+  let days_between = null;
+  if (d0 != null && d1 != null) {
+    days_between = Math.round(Math.abs(d1 - d0) / 86400000);
+  }
+  return {
+    confidence_delta_percent_points,
+    days_between,
+    patches_resolved,
+    baseline: { flagged_patch_count: b0, patch_count: t0 },
+    current: { flagged_patch_count: c1, patch_count: t1 },
+  };
+}
+
+/** Prefer server fields when set; never let explicit null clobber synthesized values. */
+function mergeCompareSummary(synth, server) {
+  if (!server || typeof server !== 'object') return synth;
+  if (!synth) return server;
+  const out = { ...synth };
+  for (const [k, v] of Object.entries(server)) {
+    if (v === null || v === undefined) continue;
+    out[k] = v;
+  }
+  return out;
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   const user = Session.require();
   if (!user) return;
@@ -77,6 +127,106 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch { showToast('Could not load reports.', 'error'); }
   }
 
+  // ── Improvement summary (from GET compare → summary) ─────
+  function setSummaryCard(card, iconEl, variant) {
+    if (!card) return;
+    card.classList.remove('positive', 'neutral', 'negative');
+    if (variant) card.classList.add(variant);
+    if (iconEl) {
+      if (variant === 'positive') iconEl.textContent = '↓';
+      else if (variant === 'negative') iconEl.textContent = '↑';
+      else iconEl.textContent = '→';
+    }
+  }
+
+  function renderCompareSummary(summary) {
+    const confCard   = document.getElementById('summary-confidence-card');
+    const confIcon   = document.getElementById('summary-confidence-icon');
+    const confVal    = document.getElementById('summary-confidence-value');
+    const confDesc   = document.getElementById('summary-confidence-desc');
+    const featCard   = document.getElementById('summary-features-card');
+    const featIcon   = document.getElementById('summary-features-icon');
+    const featVal    = document.getElementById('summary-features-value');
+    const featDesc   = document.getElementById('summary-features-desc');
+    const periodVal  = document.getElementById('summary-period-value');
+    const periodDesc = document.getElementById('summary-period-desc');
+
+    if (!summary) {
+      if (confVal) confVal.textContent = '—';
+      if (featVal) featVal.textContent = '—';
+      if (periodVal) periodVal.textContent = '—';
+      if (confDesc) confDesc.textContent = 'Load a comparison to see summary metrics.';
+      if (featDesc) featDesc.textContent = 'Patch-level comparison uses stored per-patch PD scores.';
+      if (periodDesc) periodDesc.textContent = 'Uses session date, or upload time if session date is missing.';
+      setSummaryCard(confCard, confIcon, 'neutral');
+      setSummaryCard(featCard, featIcon, 'neutral');
+      return;
+    }
+
+    const d = summary.confidence_delta_percent_points;
+    if (confVal) {
+      if (d == null) confVal.textContent = '—';
+      else {
+        const sign = d > 0 ? '+' : '';
+        confVal.textContent = `${sign}${d}%`;
+      }
+    }
+    if (d == null) {
+      setSummaryCard(confCard, confIcon, 'neutral');
+      if (confDesc) confDesc.textContent = 'Confidence scores are missing on one or both reports.';
+    } else if (d < 0) {
+      setSummaryCard(confCard, confIcon, 'positive');
+      if (confDesc) confDesc.textContent = 'Lower model confidence versus baseline (often aligned with reduced PD emphasis).';
+    } else if (d > 0) {
+      setSummaryCard(confCard, confIcon, 'negative');
+      if (confDesc) confDesc.textContent = 'Higher model confidence versus baseline.';
+    } else {
+      setSummaryCard(confCard, confIcon, 'neutral');
+      if (confDesc) confDesc.textContent = 'No change in model confidence between the two reports.';
+    }
+
+    const b0 = Number(summary.baseline?.flagged_patch_count ?? 0);
+    const c1 = Number(summary.current?.flagged_patch_count ?? 0);
+    const resolved = Number(summary.patches_resolved ?? Math.max(0, b0 - c1));
+
+    if (featVal) {
+      if (b0 === 0 && c1 === 0) featVal.textContent = '0 / 0';
+      else if (b0 === 0) featVal.textContent = `0 → ${c1}`;
+      else featVal.textContent = `${resolved} of ${b0}`;
+    }
+
+    if (featDesc) {
+      if (b0 === 0 && c1 === 0) {
+        featDesc.textContent = 'No patch-level PD breakdown stored, or no patches exceeded the threshold.';
+      } else if (b0 === 0) {
+        featDesc.textContent = 'Baseline had no elevated patch-level PD signals; current scan shows localized model emphasis.';
+      } else if (resolved > 0) {
+        featDesc.textContent = 'Fewer patches at or above the PD threshold in the current report than in baseline.';
+      } else if (c1 < b0) {
+        featDesc.textContent = 'Patch-level PD emphasis decreased in the current report.';
+      } else if (c1 === b0) {
+        featDesc.textContent = 'Same number of elevated patch-level signals as baseline.';
+      } else {
+        featDesc.textContent = 'More patches at or above the PD threshold than in baseline.';
+      }
+    }
+
+    if (resolved > 0 && b0 > 0) setSummaryCard(featCard, featIcon, 'positive');
+    else if (c1 > b0 && b0 > 0) setSummaryCard(featCard, featIcon, 'negative');
+    else setSummaryCard(featCard, featIcon, 'neutral');
+
+    const days = summary.days_between;
+    if (periodVal) {
+      if (days == null) periodVal.textContent = '—';
+      else periodVal.textContent = `${days} day${days === 1 ? '' : 's'}`;
+    }
+    if (periodDesc) {
+      periodDesc.textContent = days == null
+        ? 'Session dates could not be read for one or both reports.'
+        : 'Calendar days between the two selected reports (by session or upload date).';
+    }
+  }
+
   // ── Load comparison panels ────────────────────────────────
   async function loadComparison() {
     const studentId = studentSel.value;
@@ -96,6 +246,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       renderPanel(1, data.report1);
       renderPanel(2, data.report2);
+      const synth = synthesizeCompareSummary(data.report1, data.report2);
+      const summary = mergeCompareSummary(synth, data.summary);
+      renderCompareSummary(summary);
 
       if (compareWrap) compareWrap.style.display = 'block';
       if (trendSection) trendSection.style.display = 'block';
