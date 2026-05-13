@@ -98,19 +98,14 @@
               >Reports</a
             >
             <span>›</span>
-            <span>STU-001 — Jun 10, 2025</span>
+            <span id="report-breadcrumb-tail">Report</span>
           </div>
         </div>
-        <!-- DEV NOTE: Status flag driven by risk score.
-         If confidence >= threshold (e.g. 0.65) → "Potential"; else "Low Potential".
-         Threshold configurable via GET /api/config. -->
-        <div class="status-flag potential" id="status-flag">🔴 Potential Dysgraphia</div>
+        <div class="status-flag potential" id="status-flag">Potential Dysgraphia</div>
       </div>
 
       <div class="content report-content">
         <!-- ── Report meta bar ─────────────────────────────── -->
-        <!-- DEV NOTE: Populate from GET /api/report/:reportId →
-         { student, sessionDate, classId, confidence, label, reportId } -->
         <div class="report-meta">
           <div class="meta-avatar" id="meta-avatar">AA</div>
           <div class="meta-info">
@@ -124,22 +119,12 @@
           </div>
           <div class="confidence-display">
             <div class="conf-label">Risk Score</div>
-            <!-- DEV NOTE: Replace with live risk score output from model inference. -->
             <div class="conf-value high" id="conf-value">—</div>
             <div class="conf-sub" id="conf-sub">—</div>
           </div>
         </div>
 
         <!-- ── 4-Panel grid ────────────────────────────────── -->
-        <!-- DEV NOTE: ALL 4 panels receive image data from GET /api/report/:reportId.
-         Fields: { original_b64, shap_b64, gradcam_b64, metadata }.
-         Replace placeholders with:
-         <img src={`data:image/png;base64,${panel_b64}`}> in React. -->
-        <div class="dev-note" style="margin-bottom: 16px">
-          4-Panel grid — Replace placeholder visuals with base64 image data from GET
-          /api/report/:reportId: original_b64, shap_b64, gradcam_b64, and metadata object.
-        </div>
-
         <div class="panel-grid">
           <!-- Panel 1: Original Handwriting -->
           <div class="panel-card">
@@ -148,7 +133,6 @@
               <span class="panel-title">Original Handwriting</span>
               <span class="panel-badge badge-original">RAW</span>
             </div>
-            <!-- DEV NOTE: Replace with <img> using original_b64 from report API. -->
             <div class="panel-img" id="panel-original">
               <div class="panel-placeholder-icon">🖊️</div>
               <div class="panel-placeholder-text">
@@ -164,22 +148,10 @@
               <span class="panel-title">SHAP Heatmap</span>
               <span class="panel-badge badge-shap">XAI</span>
             </div>
-            <!-- DEV NOTE: Replace with <img> using shap_b64 from report API.
-             Red = dysgraphia feature contribution. Blue = counter-evidence. -->
-            <div class="shap-mockup" id="panel-shap">
-              <div class="panel-placeholder-icon" style="color: rgba(255, 255, 255, 0.7)">🔥</div>
-              <div class="panel-placeholder-text" style="color: rgba(255, 255, 255, 0.6)">
+            <div class="panel-img" id="panel-shap">
+              <div class="panel-placeholder-icon">🔥</div>
+              <div class="panel-placeholder-text">
                 SHAP pixel<br />attribution map
-              </div>
-              <div class="shap-legend">
-                <div class="legend-item">
-                  <div class="legend-dot" style="background: #c0392b"></div>
-                  High contribution
-                </div>
-                <div class="legend-item">
-                  <div class="legend-dot" style="background: #1abc9c"></div>
-                  Counter-evidence
-                </div>
               </div>
             </div>
           </div>
@@ -191,14 +163,10 @@
               <span class="panel-title">Grad-CAM</span>
               <span class="panel-badge badge-gradcam">SPATIAL</span>
             </div>
-            <!-- DEV NOTE: Replace with <img> using gradcam_b64.
-             Grad-CAM shows spatial focus regions of the convolutional layers. -->
-            <div class="gradcam-mockup" id="panel-gradcam">
-              <div style="text-align: center">
-                <div class="panel-placeholder-icon" style="color: rgba(255, 255, 255, 0.7)">📍</div>
-                <div class="panel-placeholder-text" style="color: rgba(255, 255, 255, 0.7)">
-                  Grad-CAM spatial<br />localization overlay
-                </div>
+            <div class="panel-img" id="panel-gradcam">
+              <div class="panel-placeholder-icon">📍</div>
+              <div class="panel-placeholder-text">
+                Grad-CAM spatial<br />localization overlay
               </div>
             </div>
           </div>
@@ -515,9 +483,6 @@
       <div class="sidebar-section">
         <div class="sidebar-section-title">Clinician Validation</div>
 
-        <!-- DEV NOTE: Shown ONLY when role === "clinician".
-         report.js controls visibility from session role.
-         POST /api/report/:reportId/validate { decision: "verify"|"disagree", clinicianId } -->
         <div class="validation-row" id="validation-row" style="display: none">
           <div class="val-btn verify" id="val-verify">
             <span class="val-btn-icon">✅</span>
@@ -529,39 +494,26 @@
           </div>
         </div>
 
-        <!-- Shown when role === "educator" -->
-        <div class="clinician-locked" id="clinician-locked" style="display: none">
-          🔒 Validation reserved for Clinicians only.<br />
-          Contact your assigned clinician to review this report.
-        </div>
-
-        <div class="dev-note" style="margin-top: 10px">
-          Visibility controlled by report.js based on session role. POST
-          /api/report/:reportId/validate { decision, clinicianId }.
+        <div class="educator-validation-summary" id="educator-validation-panel" style="display: none">
+          <div class="edu-val-status" id="validation-status-line">—</div>
+          <div class="edu-val-notes-label">Clinical notes (IEP record)</div>
+          <div class="edu-val-notes-body" id="validation-clinician-notes">—</div>
         </div>
       </div>
 
       <!-- Educator Notes -->
       <div class="sidebar-section">
         <div class="sidebar-section-title">Educator Notes</div>
-        <!-- DEV NOTE: Pre-populate from report.educatorNote if record exists.
-         Autosaves on 2s debounce. PATCH /api/report/:reportId { educatorNote } -->
         <textarea
           class="notes-field"
           id="educator-notes"
           placeholder="Add context about this session… e.g. Student was fatigued, written after recess, task was timed…"
         ></textarea>
-        <div class="dev-note" style="margin-top: 10px">
-          PLACEHOLDER — Load existing note from report.educatorNote on mount. Autosave on 2s
-          debounce. PATCH /api/report/:reportId with { educatorNote }.
-        </div>
       </div>
 
       <!-- Save / Discard -->
       <div class="sidebar-section">
         <div class="sidebar-section-title">Commit to Record</div>
-        <!-- DEV NOTE: Save → POST /api/report/:reportId/save → writes to student permanent history.
-         Discard → abandon session (no write). Confirm discard with modal (handled in report.js). -->
         <button class="save-btn" id="save-btn">💾 Save to Student History</button>
         <button class="discard-btn" id="discard-btn">Discard This Report</button>
         <p
@@ -580,27 +532,21 @@
       <!-- Audit Trail -->
       <div class="sidebar-section">
         <div class="sidebar-section-title">Audit Trail</div>
-        <!-- DEV NOTE: Populate from report metadata — reportId, timestamps, model version hash.
-         Do not hardcode in production. GET /api/report/:reportId includes modelVersionHash. -->
         <div class="audit-row">
           <span class="audit-key">Report ID</span>
-          <span class="audit-val">#RPT-0041</span>
+          <span class="audit-val" id="audit-report-id">—</span>
         </div>
         <div class="audit-row">
           <span class="audit-key">Generated</span>
-          <span class="audit-val">Jun 10, 2:14 PM</span>
+          <span class="audit-val" id="audit-generated">—</span>
         </div>
         <div class="audit-row">
           <span class="audit-key">Model Hash</span>
-          <span class="audit-val">a3f8c21d</span>
+          <span class="audit-val" id="audit-model-hash">—</span>
         </div>
         <div class="audit-row">
           <span class="audit-key">Uploaded by</span>
           <span class="audit-val" id="audit-uploader">—</span>
-        </div>
-        <div class="dev-note" style="margin-top: 8px">
-          Replace with live data from GET /api/report/:reportId — include modelVersionHash for
-          traceability.
         </div>
       </div>
     </div>
@@ -608,14 +554,5 @@
 
     <script src="../js/app.js"></script>
     <script src="../js/report.js"></script>
-
-    <script>
-      // Populate audit uploader from session
-      document.addEventListener('DOMContentLoaded', () => {
-        const user = Session.get();
-        const uploaderEl = document.getElementById('audit-uploader');
-        if (user && uploaderEl) uploaderEl.textContent = user.name;
-      });
-    </script>
   </body>
 </html>

@@ -285,15 +285,36 @@ body.report-page {
 .val-btn.disagree.selected .val-btn-label { color: var(--danger); }
 .val-btn:hover:not(.selected) { border-color: #aaa; }
 
-.clinician-locked {
+.educator-validation-summary {
   background: var(--mist);
   border: 1px solid var(--rule);
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 12px 14px;
-  font-size: 0.75rem;
+}
+
+.edu-val-status {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.45;
+  margin-bottom: 12px;
+}
+
+.edu-val-notes-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: var(--ghost);
-  text-align: center;
+  margin-bottom: 6px;
+}
+
+.edu-val-notes-body {
+  font-size: 0.8rem;
   line-height: 1.5;
+  color: var(--slate);
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 /* Notes */

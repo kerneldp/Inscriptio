@@ -13,6 +13,7 @@ import os
 import io
 import json
 import base64
+import hashlib
 import logging
 import numpy as np
 import cv2
@@ -29,7 +30,7 @@ from datetime import datetime
 from pathlib import Path
 
 from database import get_db
-from models import Report, Student
+from models import Report, Student, User
 from auth import get_current_user
 from typing import Optional
 
@@ -43,6 +44,23 @@ CLASS_NAMES = ["LPD", "PD"]
 LABEL_MAP   = {"PD": "Potential", "LPD": "Low Potential"}
 UPLOADS_DIR = Path(__file__).parent / "uploads"
 UPLOADS_DIR.mkdir(exist_ok=True)
+
+_MODEL_VERSION_FP: Optional[str] = None
+
+
+def model_version_fingerprint() -> str:
+    """Stable short hash for the bundled .keras file (size + mtime + name)."""
+    global _MODEL_VERSION_FP
+    if _MODEL_VERSION_FP is not None:
+        return _MODEL_VERSION_FP
+    if not MODEL_PATH.exists():
+        _MODEL_VERSION_FP = "unknown"
+        return _MODEL_VERSION_FP
+    st = MODEL_PATH.stat()
+    raw = f"{MODEL_PATH.name}|{st.st_size}|{st.st_mtime}".encode()
+    _MODEL_VERSION_FP = hashlib.sha256(raw).hexdigest()[:12]
+    return _MODEL_VERSION_FP
+
 
 router = APIRouter(prefix="/api/report", tags=["Report & ML Pipeline"])
 
@@ -484,7 +502,6 @@ async def analyze(
     shap_path          = save_img_b64(result["shap_b64"],           "shap")
     severe_anomaly_path= save_img_b64(result["severe_anomaly_b64"], "severe")
 
-    from models import User
     db_user = db.query(User).filter(User.email == current_user["email"]).first()
     uploader_id = db_user.id if db_user else 1
 
@@ -545,6 +562,7 @@ def get_report(
         return None
 
     student = db.query(Student).filter(Student.id == r.student_id).first()
+    uploader = db.query(User).filter(User.id == r.uploaded_by).first()
 
     def load_gray(path: str):
         if not path:
@@ -591,6 +609,9 @@ def get_report(
         "gradcam_b64":        load_b64(r.gradcam_img),
         "shap_b64":           load_b64(r.shap_img),
         "severe_anomaly_b64": load_b64(r.severe_anomaly_img),
+        "uploaded_by":        r.uploaded_by,
+        "uploaded_by_name":   uploader.name if uploader else None,
+        "model_version_hash": model_version_fingerprint(),
     }
 
 

@@ -10,6 +10,78 @@
 
 const API = 'http://localhost:8000';
 
+function formatReportGenerated(iso) {
+  if (!iso) return '—';
+  try {
+    return new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+  } catch {
+    return '—';
+  }
+}
+
+function updateBreadcrumbTail(data, reportId) {
+  const el = document.getElementById('report-breadcrumb-tail');
+  if (!el) return;
+  const sid = data.student_id != null ? String(data.student_id).padStart(3, '0') : '—';
+  let dt = '—';
+  if (data.created_at) {
+    try {
+      dt = new Date(data.created_at).toLocaleDateString(undefined, {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
+    } catch { /* ignore */ }
+  }
+  el.textContent = `STU-${sid} — ${dt}`;
+}
+
+function updateAuditTrail(data, reportId) {
+  const rid = document.getElementById('audit-report-id');
+  const gen = document.getElementById('audit-generated');
+  const hash = document.getElementById('audit-model-hash');
+  const up = document.getElementById('audit-uploader');
+  const num = data.report_id ?? reportId;
+  if (rid) rid.textContent = num != null ? `#RPT-${String(num).padStart(4, '0')}` : '—';
+  if (gen) gen.textContent = formatReportGenerated(data.created_at);
+  if (hash) hash.textContent = data.model_version_hash || '—';
+  if (up) up.textContent = data.uploaded_by_name || '—';
+}
+
+function applyEducatorClinicalSummary(data) {
+  const statusEl = document.getElementById('validation-status-line');
+  const notesEl = document.getElementById('validation-clinician-notes');
+  if (!statusEl || !notesEl) return;
+
+  const verdict = data.verdict;
+  let status = 'Pending clinical review.';
+  if (verdict === 'verify') {
+    status = 'Clinician concurred with the AI (validated).';
+  } else if (verdict === 'disagree') {
+    status = 'Clinician disagreed with the AI (follow-up required).';
+    const oc = (data.override_category || '').trim();
+    if (oc) status += ` Reason: ${oc}.`;
+  }
+
+  statusEl.textContent = status;
+  const cn = (data.clinician_notes || '').trim();
+  notesEl.textContent = cn || 'No clinical notes have been recorded yet.';
+}
+
+function syncValidationChrome(isClinicianRole) {
+  const validationRow = document.getElementById('validation-row');
+  const educatorPanel = document.getElementById('educator-validation-panel');
+  if (!validationRow || !educatorPanel) return;
+  const rid = sessionStorage.getItem('current_report_id');
+  if (isClinicianRole) {
+    educatorPanel.style.display = 'none';
+    validationRow.style.display = rid ? 'flex' : 'none';
+  } else {
+    validationRow.style.display = 'none';
+    educatorPanel.style.display = 'block';
+  }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   const user = Session.require();
   if (!user) return;
@@ -17,6 +89,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   initSidebarNav();
 
   const reportId = sessionStorage.getItem('current_report_id');
+  const isClinicianRole = user.role === 'clinician';
+  const notesField = document.getElementById('educator-notes');
+
   if (!reportId) {
     // Sidebar "Reports" can be opened without selecting a specific report.
     // In that case, keep the user on this page and show a clear empty state
@@ -45,6 +120,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     setText('meta-validated', '—');
     setText('conf-mid', '—');
 
+    updateAuditTrail({}, null);
+    const tail = document.getElementById('report-breadcrumb-tail');
+    if (tail) tail.textContent = 'Report';
+
+    if (!isClinicianRole) {
+      const statusEl = document.getElementById('validation-status-line');
+      const notesEl = document.getElementById('validation-clinician-notes');
+      if (statusEl) {
+        statusEl.textContent = 'Open a saved report from the dashboard or after upload to see validation status.';
+      }
+      if (notesEl) notesEl.textContent = '—';
+    }
+
     const confBar = document.getElementById('conf-bar-fill');
     if (confBar) confBar.style.width = '0%';
 
@@ -62,28 +150,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     emptyPanel('panel-original', 'No report loaded');
     emptyPanel('panel-shap', 'No SHAP map yet');
     emptyPanel('panel-gradcam', 'No Grad-CAM yet');
+    emptyPanel('panel-severe', 'No anomaly panel yet');
 
     // Disable actions that require a report
     const saveBtn = document.getElementById('save-btn');
     const discardBtn = document.getElementById('discard-btn');
     if (saveBtn) saveBtn.disabled = true;
     if (discardBtn) discardBtn.disabled = true;
+    if (notesField) notesField.disabled = true;
+    syncValidationChrome(isClinicianRole);
     return;
   }
 
-  // ── Role-based UI ─────────────────────────────────────────
-  const isClinicianRole = user.role === 'clinician';
-  const validationRow = document.getElementById('validation-row');
-  const clinicianLocked = document.getElementById('clinician-locked');
+  if (notesField) notesField.disabled = false;
+  syncValidationChrome(isClinicianRole);
 
-  if (validationRow && clinicianLocked) {
-    validationRow.style.display = isClinicianRole ? 'flex' : 'none';
-    clinicianLocked.style.display = isClinicianRole ? 'none' : 'block';
-  }
+  let validationDecision = null;
 
-  // ── Load report data from backend ────────────────────────
-  if (reportId) {
-    try {
+  try {
       const res = await authFetch(`${API}/api/report/${reportId}`);
       const data = await res.json();
 
@@ -163,18 +247,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         confBar.style.width = pct.toFixed(1) + '%';
         confBar.style.backgroundColor = isPotential ? 'var(--danger)' : 'var(--teal)';
       }
-      // Panel images — replace placeholders with real base64 images
-      function setPanel(id, b64) {
+      // Panel images — base64 from GET /api/report/:id
+      function setPanel(id, b64, shortLabel) {
         const el = document.getElementById(id);
-        if (!el || !b64) return;
-        el.innerHTML = `<img style="width:100%;height:100%;object-fit:contain;border-radius:8px;"
-          src="data:image/png;base64,${b64}" alt="${id}">`;
+        if (!el) return;
+        if (b64) {
+          el.innerHTML =
+            `<img style="width:100%;height:100%;object-fit:contain;border-radius:8px;" ` +
+            `src="data:image/png;base64,${b64}" alt="${shortLabel || id}">`;
+        } else {
+          el.innerHTML =
+            `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;` +
+            `height:100%;min-height:140px;gap:8px;padding:14px;text-align:center;color:var(--ghost);` +
+            `font-size:0.82rem;">No ${shortLabel || 'image'} available.</div>`;
+        }
       }
 
-      setPanel('panel-original', data.original_b64);
-      setPanel('panel-shap', data.shap_b64);
-      setPanel('panel-gradcam', data.gradcam_b64);
-      setPanel('panel-severe', data.severe_anomaly_b64);
+      setPanel('panel-original', data.original_b64, 'original scan');
+      setPanel('panel-shap', data.shap_b64, 'SHAP map');
+      setPanel('panel-gradcam', data.gradcam_b64, 'Grad-CAM');
+      setPanel('panel-severe', data.severe_anomaly_b64, 'anomaly focus');
 
       // ── Probability Averaging section ──────────────────
       if (data.patch_breakdown && data.patch_breakdown.length > 0) {
@@ -252,11 +344,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       // Pre-fill notes if already saved
-      const notesField = document.getElementById('educator-notes');
       if (notesField) notesField.value = data.educator_context_display || data.notes || '';
+
+      updateBreadcrumbTail(data, reportId);
+      updateAuditTrail(data, reportId);
+      if (!isClinicianRole) applyEducatorClinicalSummary(data);
+      syncValidationChrome(isClinicianRole);
 
       // Pre-fill verdict buttons if already validated
       if (data.verdict) {
+        validationDecision = data.verdict;
         document
           .getElementById('val-verify')
           ?.classList.toggle('selected', data.verdict === 'verify');
@@ -267,11 +364,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (err) {
       showToast(`Could not load report: ${err.message}`, 'error');
     }
-  }
 
   // ── Clinician validation ──────────────────────────────────
-  let validationDecision = null;
-
   function setValidation(decision) {
     validationDecision = decision;
     document.getElementById('val-verify')?.classList.toggle('selected', decision === 'verify');
@@ -300,7 +394,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     ?.addEventListener('click', () => setValidation('disagree'));
 
   // ── Notes autosave ────────────────────────────────────────
-  const notesField = document.getElementById('educator-notes');
   let notesTimer = null;
 
   notesField?.addEventListener('input', () => {
