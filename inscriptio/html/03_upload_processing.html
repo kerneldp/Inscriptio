@@ -83,8 +83,6 @@
           </div>
         </div>
         <div class="card-body">
-          <!-- DEV NOTE: Wire drag-and-drop events to state in upload.js.
-               Validate: image/png or image/jpeg only, max 10 MB. -->
           <div class="dropzone" id="dropzone">
             <span class="dz-icon">🖼️</span>
             <div class="dz-title">Drop the handwriting image here</div>
@@ -109,10 +107,6 @@
 
           <!-- Hidden real file input -->
           <input type="file" id="file-input" accept="image/png,image/jpeg">
-
-          <div class="dev-note" style="margin-top:14px;">
-            PLACEHOLDER — Drag-drop and file-select wired in upload.js. On file drop/select, validates type and size, displays preview. Replace preview binarization with real backend call to POST /api/preprocess/preview.
-          </div>
         </div>
       </div>
 
@@ -131,7 +125,6 @@
             <!-- Original -->
             <div class="preview-panel">
               <div class="preview-label">Layer A — Original</div>
-              <!-- DEV NOTE: Replaced with <img> via URL.createObjectURL() in upload.js -->
               <div id="preview-original">
                 <div class="preview-placeholder">
                   <span style="font-size:1.8rem">🖊️</span>
@@ -146,12 +139,10 @@
                 Layer B — Binarized
                 <span class="dim-badge">224×224</span>
               </div>
-              <!-- DEV NOTE: Real backend: POST /api/preprocess/preview → binarized_b64.
-                   Prototype uses canvas-based Otsu approximation in upload.js. -->
               <div id="preview-binarized">
                 <div class="preview-placeholder">
                   <span style="font-size:1.8rem">⬛</span>
-                  <div class="preview-placeholder-text">Otsu-binarized 224×224<br>tensor appears here</div>
+                  <div class="preview-placeholder-text">Otsu-binarized 224×224<br>preview appears here</div>
                 </div>
               </div>
             </div>
@@ -167,8 +158,6 @@
               </div>
               <div class="step-status">Waiting</div>
             </div>
-            <!-- DEV NOTE: Steps 1–3 controlled by upload.js preprocessing state.
-                 Backend should return { steps: [{id, status}] } from preprocess API. -->
             <div class="step">
               <div class="step-icon pending">○</div>
               <div>
@@ -194,10 +183,6 @@
               <div class="step-status">Waiting</div>
             </div>
           </div>
-
-          <div class="dev-note" style="margin-top:14px;">
-            Backend team: POST /api/preprocess/preview — accept multipart image, return { original_b64, binarized_b64, steps: [{id, status}] }. Prototype runs Otsu approximation client-side via canvas.
-          </div>
         </div>
       </div>
 
@@ -216,35 +201,25 @@
           </div>
         </div>
         <div class="card-body" style="padding:20px;">
-          <!-- DEV NOTE: Populate student dropdown from GET /api/students?active=true. -->
           <div class="field-group">
             <span class="field-label">Select Student</span>
             <div class="select-wrap">
               <select class="field-select" id="student-select">
                 <option value="">— Choose a student —</option>
-                <option value="STU-001">Ana Aquino (#STU-001)</option>
-                <option value="STU-002">Ben Lim (#STU-002)</option>
-                <option value="STU-003">Cara Maño (#STU-003)</option>
-                <option value="STU-004">Diego Santos (#STU-004)</option>
-                <option value="STU-005">Elena Villanueva (#STU-005)</option>
               </select>
             </div>
           </div>
 
           <div class="field-group">
             <span class="field-label">Class / Section</span>
-            <div class="select-wrap">
-              <select class="field-select">
-                <option>Class A</option>
-                <option>Class B</option>
-                <option>Class C</option>
-              </select>
-            </div>
+            <input class="field-input" type="text" id="student-class-display" readonly
+              placeholder="Shown from the student record when selected"
+              style="background:var(--mist, #f8fafc);cursor:default;">
           </div>
 
           <div class="field-group">
             <span class="field-label">Session Date</span>
-            <input class="field-input" type="date" value="2025-06-10">
+            <input class="field-input" type="date" id="session-date">
           </div>
 
           <div class="field-group">
@@ -259,47 +234,37 @@
         </div>
       </div>
 
-      <!-- Analyze button -->
-      <!-- DEV NOTE: onClick → POST /api/analyze { studentId, sessionDate, classId, imageFile }.
-           On success, poll GET /api/report/:reportId until status === "ready", then navigate to report.
-           Loading spinner shown on button during request (handled in upload.js). -->
       <button class="analyze-btn" id="analyze-btn" disabled>
         <span>⚡</span>
         <span id="analyze-btn-text">Run XAI Analysis</span>
       </button>
-      <p class="btn-note">Triggers MobileNetV3 + SHAP + Grad-CAM pipeline.<br>Results appear in Report View (~10–30 seconds).</p>
+      <p class="btn-note">Runs the screening model on the server.<br>When it finishes, you are taken to the report view.</p>
 
-      <div class="dev-note">
-        PLACEHOLDER — POST /api/analyze accepts multipart/form-data. Returns { reportId, studentId, status: "processing" }. Frontend polls GET /api/report/:reportId until status === "ready", then redirects to report page.
-      </div>
-
-      <!-- AI Engine Info -->
       <div class="algo-box">
         <div class="algo-title">AI Engine Configuration</div>
-        <!-- DEV NOTE: Replace static values with live GET /api/model/info response.
-             Include model version hash for audit trail. -->
         <div class="algo-row">
           <span class="algo-key">Model</span>
-          <span class="algo-val">MobileNetV3-Small</span>
+          <span class="algo-val" id="model-info-name">—</span>
         </div>
         <div class="algo-row">
           <span class="algo-key">Explainability</span>
-          <span class="algo-val">SHAP + Grad-CAM</span>
+          <span class="algo-val" id="model-info-xai">—</span>
         </div>
         <div class="algo-row">
           <span class="algo-key">Input Size</span>
-          <span class="algo-val">224 × 224 px</span>
+          <span class="algo-val" id="model-info-input">—</span>
         </div>
         <div class="algo-row">
           <span class="algo-key">Preprocessing</span>
-          <span class="algo-val">Otsu Binarization</span>
+          <span class="algo-val" id="model-info-pre">—</span>
         </div>
         <div class="algo-row">
           <span class="algo-key">Output</span>
-          <span class="algo-val">Risk Score %</span>
+          <span class="algo-val" id="model-info-output">—</span>
         </div>
-        <div class="dev-note">
-          Replace static values above with live GET /api/model/info response. Include model version hash for audit trail.
+        <div class="algo-row">
+          <span class="algo-key">Model version (audit)</span>
+          <span class="algo-val" id="model-info-version" style="font-size:0.8rem;font-family:ui-monospace,monospace;">—</span>
         </div>
       </div>
 

@@ -17,7 +17,9 @@ python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 
 # ── Machine Learning ──────────────────────────────────────────────────────────
-# NOTE: TensorFlow requires Python 3.9–3.11. Python 3.12 is NOT supported.
+# TensorFlow 2.16+ bundles Keras 3; the bundled .keras model may fail on older TF
+# with "Unrecognized keyword arguments ... quantization_config" — upgrade if that appears.
+# TensorFlow supports Python 3.9–3.12 (check tensorflow.org for your version).
 tensorflow>=2.16.0
 numpy>=1.26.0
 pandas>=2.2.0

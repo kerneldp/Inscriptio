@@ -1,7 +1,8 @@
 """
 report.py — Full XAI ML Pipeline
 Endpoints:
-  POST /api/report/preprocess/preview  — upload image, return binarized preview
+  POST /api/report/preprocess/preview  — upload image, return binarized preview + steps
+  GET  /api/report/model/info          — model metadata and version hash for audit
   POST /api/report/analyze             — run MobileNetV3 + GradCAM + SHAP
   GET  /api/report/{report_id}         — fetch saved report
   POST /api/report/{report_id}/validate — clinician verify/disagree
@@ -12,6 +13,8 @@ Endpoints:
 import os
 import io
 import json
+import zipfile
+import tempfile
 import base64
 import hashlib
 import logging
@@ -67,17 +70,91 @@ router = APIRouter(prefix="/api/report", tags=["Report & ML Pipeline"])
 # ── Load model once at startup ────────────────────────────────────────────────
 _model = None
 
+
+def _strip_quantization_config_from_config(obj) -> None:
+    """Remove keys older Keras Dense layers reject when deserializing newer-saved models."""
+    if isinstance(obj, dict):
+        obj.pop("quantization_config", None)
+        for v in list(obj.values()):
+            _strip_quantization_config_from_config(v)
+    elif isinstance(obj, list):
+        for item in obj:
+            _strip_quantization_config_from_config(item)
+
+
+def _keras_zip_with_stripped_quantization(src: Path) -> Path:
+    """
+    Build a temporary copy of a .keras zip with quantization_config removed from JSON configs.
+    Keras 3 may serialize Dense(..., quantization_config=None); Keras 2 / older TF rejects it.
+    """
+    tmp = tempfile.NamedTemporaryFile(suffix=".keras", prefix="inscriptio_model_", delete=False)
+    tmp_path = Path(tmp.name)
+    tmp.close()
+    try:
+        with zipfile.ZipFile(src, "r") as zin, zipfile.ZipFile(
+            tmp_path, "w", compression=zipfile.ZIP_DEFLATED
+        ) as zout:
+            for info in zin.infolist():
+                if info.is_dir():
+                    continue
+                raw = zin.read(info.filename)
+                if info.filename == "config.json" or info.filename.endswith("/config.json"):
+                    try:
+                        cfg = json.loads(raw.decode("utf-8"))
+                        _strip_quantization_config_from_config(cfg)
+                        raw = json.dumps(cfg).encode("utf-8")
+                    except (json.JSONDecodeError, UnicodeDecodeError):
+                        pass
+                zout.writestr(info.filename, raw, compress_type=info.compress_type)
+        return tmp_path
+    except Exception:
+        try:
+            tmp_path.unlink(missing_ok=True)
+        except OSError:
+            pass
+        raise
+
+
 def get_model():
     global _model
-    if _model is None:
-        if not MODEL_PATH.exists():
-            raise HTTPException(
-                status_code=503,
-                detail=f"Model file not found. Place FINAL_production_model.keras in the python/ folder."
-            )
-        log.info("Loading MobileNetV3 model...")
-        _model = tf.keras.models.load_model(str(MODEL_PATH))
-        log.info("Model loaded successfully.")
+    if _model is not None:
+        return _model
+    if not MODEL_PATH.exists():
+        raise HTTPException(
+            status_code=503,
+            detail="Model file not found. Place FINAL_production_model.keras in the python/ folder.",
+        )
+    log.info("Loading MobileNetV3 model...")
+    patched_path: Optional[Path] = None
+    try:
+        try:
+            _model = tf.keras.models.load_model(str(MODEL_PATH))
+        except Exception as e:
+            msg = str(e).lower()
+            if "quantization_config" in msg and MODEL_PATH.suffix.lower() == ".keras":
+                log.warning(
+                    "Model load failed on quantization_config; retrying with stripped config.json (%s)",
+                    e,
+                )
+                patched_path = _keras_zip_with_stripped_quantization(MODEL_PATH)
+                _model = tf.keras.models.load_model(str(patched_path))
+            else:
+                log.exception("Model load failed")
+                raise HTTPException(
+                    status_code=503,
+                    detail=(
+                        "Could not load the screening model. "
+                        "Install a current TensorFlow (see inscriptio/python/requirements.txt), "
+                        f"then restart the API. Raw error: {e!s}"
+                    ),
+                ) from e
+    finally:
+        if patched_path is not None:
+            try:
+                patched_path.unlink(missing_ok=True)
+            except OSError as ex:
+                log.warning("Could not remove temp model file %s: %s", patched_path, ex)
+    log.info("Model loaded successfully.")
     return _model
 
 
@@ -448,11 +525,33 @@ async def preprocess_preview(
     binary = otsu_binarize(img_gray)
     thumb  = cv2.resize(binary, (224, 224))
 
+    preview_steps = [
+        {"id": "uploaded", "status": "done"},
+        {"id": "otsu", "status": "done"},
+        {"id": "resize", "status": "done"},
+        {"id": "ready", "status": "done"},
+    ]
+
     return {
         "original_b64":  ndarray_to_b64(img_gray),
         "binarized_b64": ndarray_to_b64(binary),
         "thumbnail_b64": ndarray_to_b64(thumb),
         "original_size": list(img_gray.shape),
+        "steps": preview_steps,
+    }
+
+
+@router.get("/model/info")
+def model_info(_user: dict = Depends(get_current_user)):
+    """Static pipeline metadata plus a short hash of the bundled weights file for audit."""
+    return {
+        "model_name":       "MobileNetV3-Small",
+        "explainability":   "SHAP + Grad-CAM",
+        "input_size":       "224 × 224 px",
+        "preprocessing":    "Otsu Binarization",
+        "output":           "Risk score (PD vs LPD)",
+        "class_names":      CLASS_NAMES,
+        "model_version_hash": model_version_fingerprint(),
     }
 
 
