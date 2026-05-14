@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>inscriptio — Clinician Workspace</title>
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/clinician.css">
+</head>
+<body class="clinician-app">
+
+<header class="clin-topbar">
+  <div class="clin-brand">
+    <div class="clin-brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#fff" stroke-width="2">
+        <path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+      </svg>
+    </div>
+    <div>
+      <div class="clin-brand-title">inscriptio <span class="clin-brand-badge">Clinician</span></div>
+      <div class="clin-brand-sub">HITL validation workspace</div>
+    </div>
+  </div>
+  <div class="clin-topbar-actions">
+    <div class="clin-user-chip">
+      <span class="clin-user-avatar" id="clin-avatar">—</span>
+      <div>
+        <div class="clin-user-name" id="clin-name">…</div>
+        <div class="clin-user-role">Expert reviewer</div>
+      </div>
+    </div>
+    <button type="button" class="clin-btn-ghost" id="clin-logout" title="Sign out">Sign out</button>
+  </div>
+</header>
+
+<div class="clin-shell">
+  <aside class="clin-master" aria-label="Report lists">
+    <div class="clin-master-segment" role="tablist" aria-label="Queue or validated">
+      <button type="button" class="clin-segment-btn is-active" id="clin-tab-pending" role="tab" aria-selected="true">Pending queue</button>
+      <button type="button" class="clin-segment-btn" id="clin-tab-validated" role="tab" aria-selected="false">Validated</button>
+    </div>
+    <div class="clin-master-header" id="clin-master-header">
+      <h1 class="clin-master-title" id="clin-master-title">Pending queue</h1>
+      <p class="clin-master-desc" id="clin-master-desc">Sorted by urgency, clinical severity (≥80%), score, then receipt order.</p>
+    </div>
+    <div class="clin-queue-list" id="clin-queue-list">
+      <div class="clin-queue-loading">Loading queue…</div>
+    </div>
+  </aside>
+
+  <div class="clin-center-hitl">
+    <main class="clin-detail" id="clin-detail">
+      <div class="clin-empty" id="clin-empty-state">
+        <div class="clin-empty-icon" aria-hidden="true">◇</div>
+        <p class="clin-empty-title">Select a screening</p>
+        <p class="clin-empty-text" id="clin-empty-text">Choose a student card on the left to load XAI evidence and adjudicate.</p>
+      </div>
+
+      <div class="clin-workspace" id="clin-workspace" hidden>
+        <section class="educator-context-box" id="educator-context-box" aria-label="Educator context">
+          <div class="educator-context-label">Educator context</div>
+          <p class="educator-context-text" id="educator-context-text">—</p>
+        </section>
+
+        <div class="xai-grid" id="xai-grid">
+          <figure class="xai-panel" data-panel="1">
+            <figcaption class="xai-panel-cap">Panel 1 · Preprocessed scan <span class="xai-hint">Drag to pan · double-click zoom</span></figcaption>
+            <div class="xai-panel-frame xai-panel-pannable" id="panel-1-frame">
+              <img class="xai-panel-img" id="panel-1-img" alt="Original handwriting scan">
+            </div>
+          </figure>
+          <figure class="xai-panel" data-panel="2">
+            <figcaption class="xai-panel-cap">Panel 2 · Otsu binarized <span class="xai-hint">Stroke continuity</span></figcaption>
+            <div class="xai-panel-frame xai-panel-pannable" id="panel-2-frame">
+              <img class="xai-panel-img" id="panel-2-img" alt="Otsu binarized image">
+            </div>
+          </figure>
+          <figure class="xai-panel" data-panel="3">
+            <figcaption class="xai-panel-cap">Panel 3 · Grad-CAM <span class="xai-hint">Macro localization</span></figcaption>
+            <div class="xai-panel-frame">
+              <img class="xai-panel-img" id="panel-3-img" alt="Grad-CAM heatmap">
+            </div>
+          </figure>
+          <figure class="xai-panel" data-panel="4">
+            <figcaption class="xai-panel-cap">Panel 4 · SHAP <span class="xai-hint">Pixel attribution</span></figcaption>
+            <div class="xai-panel-frame">
+              <img class="xai-panel-img" id="panel-4-img" alt="SHAP heatmap">
+            </div>
+          </figure>
+        </div>
+
+        <section class="ai-conclusion-card" id="ai-conclusion-bar" role="status" aria-label="AI diagnostic recommendation">
+          <div class="ai-conclusion-cap">AIKONIC diagnostic recommendation</div>
+          <div class="ai-conclusion-badges">
+            <span class="ai-potential-badge is-low" id="ai-potential-badge">Low Potential</span>
+            <span class="ai-severity-badge sev-unknown" id="ai-severity-badge">—</span>
+          </div>
+          <p class="ai-conclusion-text" id="ai-conclusion-main">—</p>
+        </section>
+      </div>
+    </main>
+
+    <aside class="clin-hitl-aside" id="clin-hitl-aside" aria-label="Adjudication and report details" hidden>
+      <div class="hitl-panel" id="hitl-panel-pending" hidden>
+        <div class="hitl-dock-header">
+          <span class="hitl-dock-title">Adjudication</span>
+          <span class="hitl-dock-meta font-mono" id="hitl-active-id">—</span>
+        </div>
+        <div class="hitl-verdict-row">
+          <button type="button" class="hitl-btn hitl-btn-validate" id="btn-validate-ai">Concur / Validate AI</button>
+          <button type="button" class="hitl-btn hitl-btn-override" id="btn-override-ai">Override / Discard AI</button>
+        </div>
+        <div class="hitl-override-block" id="hitl-override-block" hidden>
+          <label class="hitl-label" for="override-category">Override reason <span class="hitl-req">(required)</span></label>
+          <select class="hitl-select" id="override-category">
+            <option value="">— Select a category —</option>
+            <option value="artifact">Non-clinical artifact interference (smudge / crease)</option>
+            <option value="fatigue">Fatigue / transient issue</option>
+            <option value="pen">False positive due to pen thickness</option>
+            <option value="other">Other (explain in notes)</option>
+          </select>
+        </div>
+        <label class="hitl-label" for="clinician-diagnostic-notes">Diagnostic notes for educator &amp; IEP record</label>
+        <textarea class="hitl-textarea" id="clinician-diagnostic-notes" rows="4" placeholder="Official clinical observation…"></textarea>
+        <button type="button" class="hitl-submit" id="btn-submit-next">Submit &amp; next in queue</button>
+      </div>
+
+      <div class="hitl-panel hitl-panel-readonly" id="hitl-panel-readonly" hidden>
+        <div class="hitl-dock-header">
+          <span class="hitl-dock-title">Validated report</span>
+          <span class="hitl-dock-meta font-mono" id="hitl-readonly-id">—</span>
+        </div>
+        <p class="hitl-readonly-banner">This report is closed. Details are read-only.</p>
+        <dl class="hitl-readonly-dl">
+          <dt>Clinical decision</dt>
+          <dd id="hitl-readonly-verdict">—</dd>
+          <dt id="hitl-readonly-override-dt" hidden>Override category</dt>
+          <dd id="hitl-readonly-override-dd" hidden>—</dd>
+          <dt>Diagnostic notes (IEP record)</dt>
+          <dd><pre class="hitl-readonly-pre" id="hitl-readonly-notes">—</pre></dd>
+          <dt>AI label &amp; severity</dt>
+          <dd class="hitl-readonly-badge-row">
+            <span class="ai-potential-badge is-low" id="hitl-readonly-potential-badge">—</span>
+            <span class="ai-severity-badge sev-unknown" id="hitl-readonly-severity-badge">—</span>
+          </dd>
+          <dt>Upload date</dt>
+          <dd id="hitl-readonly-date">—</dd>
+        </dl>
+        <div class="hitl-readonly-findings-wrap" id="hitl-readonly-findings-wrap" hidden>
+          <div class="hitl-label">Model findings</div>
+          <pre class="hitl-readonly-pre hitl-readonly-findings" id="hitl-readonly-findings">—</pre>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script src="../js/app.js"></script>
+<script src="../js/clinician.js"></script>
+</body>
+</html>

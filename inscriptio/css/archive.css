@@ -1,0 +1,115 @@
+/* ============================================================
+   inscriptio — archive.css  (06_history_archive.html)
+   ============================================================ */
+
+body.archive-page {
+  display: flex;
+  min-height: 100vh;
+}
+
+.action-button.primary {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Figtree', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--teal);
+  color: #fff;
+}
+
+.action-button.primary:hover {
+  background: var(--teal-dim, #0c8a8b);
+}
+
+.archive-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
+  padding: 20px 24px;
+  background: #fafaf8;
+  border-bottom: 1px solid var(--rule);
+}
+
+.archive-toolbar .field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 160px;
+}
+
+.archive-toolbar .field-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ghost);
+  font-family: 'DM Mono', monospace;
+}
+
+.archive-toolbar .field-select,
+.archive-toolbar .field-input {
+  font-family: 'Figtree', sans-serif;
+  font-size: 0.88rem;
+  padding: 8px 12px;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.archive-table-wrap {
+  padding: 0 24px 32px;
+  overflow-x: auto;
+}
+
+.archive-table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.archive-table-wrap th {
+  text-align: left;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--rule);
+  color: var(--ghost);
+  font-weight: 600;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: 'DM Mono', monospace;
+}
+
+.archive-table-wrap td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--rule);
+  color: var(--ink);
+}
+
+.archive-table-wrap tbody tr {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.archive-table-wrap tbody tr:hover {
+  background: rgba(14, 159, 160, 0.06);
+}
+
+.archive-table-wrap tbody tr:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: -2px;
+}
+
+.archive-empty {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--ghost);
+  font-size: 0.9rem;
+}
+
+.archive-hint {
+  font-size: 0.8rem;
+  color: var(--ghost);
+  padding: 8px 24px 0;
+}
